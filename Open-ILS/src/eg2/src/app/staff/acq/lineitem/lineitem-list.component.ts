@@ -10,9 +10,9 @@ import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {StoreService} from '@eg/core/store.service';
-import {LineitemService} from './lineitem.service';
+import {LineitemService, COPY_ORDER_DISPOSITION, BatchUpdateChanges} from './lineitem.service';
 import {PoService} from '../po/po.service';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {CancelDialogComponent} from './cancel-dialog.component';
 import {PicklistDialogComponent} from './pl-dialog.component';
@@ -20,6 +20,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {BatchUpdateCopiesDialogComponent} from './batch-update-copies-dialog.component';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
+import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 
 const DELETABLE_STATES = [
     'new', 'selector-ready', 'order-ready', 'approved', 'pending-order'
@@ -41,6 +42,7 @@ export class LineitemListComponent implements OnInit {
     recordId: number = null; // lineitems related to a bib.
     lineitemId: number = null;
     onOrderCallNumbers = [];
+    batchCopyCount = 0;
 
     loading = false;
     pager: Pager = new Pager();
@@ -91,6 +93,10 @@ export class LineitemListComponent implements OnInit {
     @ViewChild('transferConfirm') transferConfirm: ConfirmDialogComponent;
     @ViewChild('batchUpdateCopiesDialog') batchUpdateCopiesDialog: BatchUpdateCopiesDialogComponent;
     @ViewChild('batchProgress') batchProgress: ProgressInlineComponent;
+    @ViewChild('distribFormCbox') private distribFormCbox: ComboboxComponent;
+    @ViewChild('distribFormItemCountTooLow') distribFormItemCountTooLow: AlertDialogComponent;
+
+    distribFormulas: ComboboxEntry[];
 
     constructor(
         private router: Router,
@@ -132,6 +138,9 @@ export class LineitemListComponent implements OnInit {
             this.pager.setLimit(count || 20);
             this.load();
         });
+
+        this.liService.fetchDistributionFormulas()
+          .then(formulas => this.distribFormulas = formulas);
     }
 
    // order was activated as some point in past
@@ -672,9 +681,11 @@ export class LineitemListComponent implements OnInit {
         });
     }
 
-    batchUpdateCopiesOnLineitemsInline(copy: IdlObject) {
+    batchUpdateCopiesOnLineitemsInline(batchChanges: BatchUpdateChanges) {
         const ids = Object.keys(this.selected).filter(id => this.selected[id]);
         if (ids.length === 0) { return; }
+
+        const copy = batchChanges.copy;
 
         this.batchSaving = true;
 
@@ -684,20 +695,34 @@ export class LineitemListComponent implements OnInit {
             if (val) { changes[field] = val; }
         });
 
-        if (Object.keys(changes).length === 0) {
+        if (batchChanges.itemCount > 0) {
+            changes.item_count = batchChanges.itemCount;
+        }
+
+        let formula = batchChanges.distributionFormula || null;
+
+        if (!formula && Object.keys(changes).length === 0) {
             this.batchSaving = false;
             return;
         }
+
+        console.debug('Batch changes', changes, 'formula = ', formula);
 
         this.net.request(
             'open-ils.acq',
             'open-ils.acq.lineitem.batch_update',
             this.auth.token(), { lineitems: ids },
-            changes
+            changes, formula
         ).subscribe(
             response => {
                 const evt = this.evt.parse(response);
-                if (!evt) {
+                if (evt) {
+                    if (evt.textcode === 'ACQ_COPY_COUNT_TOO_LOW') {
+                        this.distribFormItemCountTooLow.open().toPromise();
+                    } else {
+                        alert(evt);
+                    }
+                } else {
                     delete this.liService.liCache[response];
                     this.batchProgress.value++;
                 }
@@ -718,6 +743,7 @@ export class LineitemListComponent implements OnInit {
     }
 
 
+    // UNUSED
     batchUpdateCopiesOnLineitems() {
         const ids = Object.keys(this.selected).filter(id => this.selected[id]);
 
