@@ -119,15 +119,7 @@ export class PrintComponent implements OnInit, AfterViewInit {
     }
 
     populatePreview(): Promise<any> {
-        return this.net.request(
-            'open-ils.acq',
-            'open-ils.acq.purchase_order.format',
-            this.auth.token(), this.po.id(), 'html'
-        ).toPromise().then(response => {
-            this.outlet.innerHTML = response.template_output().data();
-        });
-// TODO: add enough fleshing so that server-side print templates can be used
-/*
+
         return this.printer.compileRemoteTemplate({
             templateName: 'purchase_order',
             printContext: 'default',
@@ -136,7 +128,6 @@ export class PrintComponent implements OnInit, AfterViewInit {
         }).then(response => {
             this.outlet.innerHTML = response.content;
         });
-*/
     }
 
     addLiPrintNotes(): Promise<any> {
@@ -176,24 +167,11 @@ export class PrintComponent implements OnInit, AfterViewInit {
             });
         }
 
-        return this.net.request(
-            'open-ils.acq',
-            'open-ils.acq.purchase_order.format',
-            this.auth.token(), this.po.id(), 'html'
-        ).toPromise().then(response => {
-            this.printer.print({
-                printContext: 'default',
-                text: response.template_output().data()
-            });
-        });
-// TODO: add enough fleshing so that server-side print templates can be used
-/*
         this.printer.print({
             templateName: 'purchase_order',
             printContext: 'default',
             contextData: {po: this.po}
         });
-*/
     }
 }
 

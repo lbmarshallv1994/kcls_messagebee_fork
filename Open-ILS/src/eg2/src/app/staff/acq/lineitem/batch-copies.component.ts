@@ -8,8 +8,9 @@ import {AuthService} from '@eg/core/auth.service';
 import {LineitemService} from './lineitem.service';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {LineitemCopyAttrsComponent} from './copy-attrs.component';
+import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {CancelDialogComponent} from './cancel-dialog.component';
-import {LineitemAlertDialogComponent} from './lineitem-alert-dialog.component';
+import {ServerStoreService} from '@eg/core/server-store.service';
 
 const BATCH_FIELDS = [
     'owning_lib',
@@ -28,34 +29,26 @@ const BATCH_FIELDS = [
 export class LineitemBatchCopiesComponent implements OnInit {
 
     @Input() lineitem: IdlObject;
-    @Input() batchAdd = false;
 
-    @Output() becameDirty = new EventEmitter<Boolean>();
-
-    @ViewChild('confirmAlertsDialog') confirmAlertsDialog: LineitemAlertDialogComponent;
+    @ViewChild('confirmAlertsDialog') confirmAlertsDialog: ConfirmDialogComponent;
     @ViewChild('cancelDialog') cancelDialog: CancelDialogComponent;
 
     // Current alert that needs confirming
     alertText: IdlObject;
-    liId: number;
-    liTitle: string;
-    alertComment: string;
+    onOrderCallNumbers = [];
 
     constructor(
         private evt: EventService,
         private idl: IdlService,
         private net: NetService,
         private auth: AuthService,
+        private serverStore: ServerStoreService,
         private liService: LineitemService
     ) {}
 
     ngOnInit() {
-        if (!this.lineitem) {
-            this.lineitem = this.idl.create('jub');
-            const copy = this.idl.create('acqlid');
-            copy.isnew(true);
-            this.lineitem.lineitem_details([copy]);
-        }
+        this.serverStore.getItem('acq.on_order.call_numbers')
+        .then(val => this.onOrderCallNumbers = val.sort());
     }
 
     // Propagate values from the batch edit bar into the indivudual LID's
@@ -66,7 +59,6 @@ export class LineitemBatchCopiesComponent implements OnInit {
             this.lineitem.lineitem_details().forEach(copy => {
                 copy[field](val);
                 copy.ischanged(true); // isnew() takes precedence
-                this.becameDirty.emit(true);
             });
         });
     }
@@ -80,7 +72,6 @@ export class LineitemBatchCopiesComponent implements OnInit {
         } else {
             // Requires a Save Changes action.
             copy.isdeleted(true);
-            this.becameDirty.emit(true);
         }
     }
 
@@ -109,7 +100,7 @@ export class LineitemBatchCopiesComponent implements OnInit {
     }
 
     receiveCopy(copy: IdlObject) {
-        this.liService.checkLiAlerts([this.lineitem], this.confirmAlertsDialog).then(ok => {
+        this.checkLiAlerts().then(ok => {
             this.net.request(
                 'open-ils.acq',
                 'open-ils.acq.lineitem_detail.receive',
@@ -124,6 +115,29 @@ export class LineitemBatchCopiesComponent implements OnInit {
             'open-ils.acq.lineitem_detail.receive.rollback',
             this.auth.token(), copy.id()
         ).subscribe(ok => this.handleActionResponse(ok));
+    }
+
+    checkLiAlerts(): Promise<boolean> {
+
+        let promise = Promise.resolve(true);
+
+        const notes = this.lineitem.lineitem_notes().filter(note =>
+            note.alert_text() && !this.liService.alertAcks[note.id()]);
+
+        if (notes.length === 0) { return promise; }
+
+        notes.forEach(n => {
+            promise = promise.then(_ => {
+                this.alertText = n.alert_text();
+                return this.confirmAlertsDialog.open().toPromise().then(ok => {
+                    if (!ok) { return Promise.reject(); }
+                    this.liService.alertAcks[n.id()] = true;
+                    return true;
+                });
+            });
+        });
+
+        return promise;
     }
 
     hasEditableCopies(): boolean {

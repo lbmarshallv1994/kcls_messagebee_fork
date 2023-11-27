@@ -339,6 +339,7 @@ sub user_settings {
         my($e, $user_id, $setting) = @_;
         my $val = $e->search_actor_user_setting({usr => $user_id, name => $setting})->[0];
         return undef unless $val; # XXX this should really return undef, but needs testing
+
         return OpenSRF::Utils::JSON->JSON2perl($val->value);
     }
 
@@ -557,6 +558,7 @@ sub update_patron {
     my $old_patron;
     my $barred_hook = '';
     my $renew_hook = '';
+    my $apply_penalties = 0;
 
     if($patron->isnew()) {
         ( $new_patron, $evt ) = _add_patron($e, _clone_patron($patron));
@@ -565,16 +567,26 @@ sub update_patron {
             return $e->die_event unless
                 $e->allowed('BAR_PATRON', $patron->home_ou);
         }
+
         if(($patron->photo_url)) {
             return $e->die_event unless
                 $e->allowed('UPDATE_USER_PHOTO_URL', $patron->home_ou);
         }
+
+        # Update patron penalties at create time so e.g. users with 
+        # zero allowed checkouts are shown to have the max checkout
+        # penalty when they are first loaded.
+        $apply_penalties = 1;
+
     } else {
         $new_patron = $patron;
 
         # Did auth checking above already.
         $old_patron = $e->retrieve_actor_user($patron->id) or
             return $e->die_event;
+
+        # Changing profiles means new penalty maps.  Update them.
+        $apply_penalties = 1 if $patron->profile ne $old_patron->profile;
 
         $renew_hook = 'au.renewed' if ($old_patron->expire_date ne $new_patron->expire_date);
 
@@ -630,6 +642,10 @@ sub update_patron {
     return $evt if $evt;
 
     $e->commit;
+
+    if ($apply_penalties) {
+        update_penalties($self, $client, $auth, $new_patron->id());
+    }
 
     my $tses = OpenSRF::AppSession->create('open-ils.trigger');
     if($patron->isnew) {
@@ -3825,6 +3841,20 @@ sub user_events {
         return $e->event unless $e->allowed('VIEW_USER', $user->home_ou);
     }
 
+    my $max_age = $U->ou_ancestor_setting_value(
+        $user->home_ou, 'circ.staff.max_visible_event_age');
+
+    if ($max_age) {
+        my $date = DateTime->now->subtract(seconds => 
+            interval_to_seconds($max_age))->strftime('%F %T%z');
+
+        if ($filters->{event}) {
+            $filters->{event}->{add_time} = {'>=' => $date};
+        } else {
+            $filters->{event} = {add_time => {'>=' => $date}};
+        }
+    }
+
     my $ses = OpenSRF::AppSession->create('open-ils.trigger');
     my $req = $ses->request('open-ils.trigger.events_by_target',
         $obj_type, $filters, {atevdef => ['reactor', 'validator']}, 2);
@@ -3833,11 +3863,20 @@ sub user_events {
         my $val = $resp->content;
         my $tgt = $val->target;
 
+        my $copy_flesh = {
+            flesh => 3,
+            flesh_fields => {
+                acp => ['call_number'],
+                acn => ['record'],
+                bre => ['simple_record']
+            }
+        };
+
         if($obj_type eq 'circ') {
-            $tgt->target_copy($e->retrieve_asset_copy($tgt->target_copy));
+            $tgt->target_copy($e->retrieve_asset_copy([$tgt->target_copy, $copy_flesh]));
 
         } elsif($obj_type eq 'ahr') {
-            $tgt->current_copy($e->retrieve_asset_copy($tgt->current_copy))
+            $tgt->current_copy($e->retrieve_asset_copy([$tgt->current_copy, $copy_flesh]))
                 if $tgt->current_copy;
         }
 
@@ -3859,13 +3898,22 @@ __PACKAGE__->register_method (
 );
 
 sub copy_events {
-    my($self, $conn, $auth, $copy_id, $filters) = @_;
+    my ($self, $conn, $auth, $copy_id, $filters, $flesh_copy) = @_;
     my $e = new_editor(authtoken => $auth);
     return $e->event unless $e->checkauth;
 
     (my $obj_type = $self->api_name) =~ s/.*\.([a-z]+)$/$1/;
 
-    my $copy = $e->retrieve_asset_copy($copy_id) or return $e->event;
+    my $copy_flesh = !$flesh_copy ? {} : {
+        flesh => 3,
+        flesh_fields => {
+            acp => ['call_number'],
+            acn => ['record'],
+            bre => ['simple_record']
+        }
+    };
+
+    my $copy = $e->retrieve_asset_copy([$copy_id, $copy_flesh]) or return $e->event;
 
     my $copy_field = 'target_copy';
     $copy_field = 'current_copy' if $obj_type eq 'ahr';
@@ -4259,7 +4307,10 @@ sub negative_balance_users {
                 }
             }
         },
-        where => {'+mous' => {balance_owed => {'<' => 0}}},
+        where => {
+            '+au' => {deleted => 'f'},
+            '+mous' => {balance_owed => {'<' => 0}}
+        },
         offset => $options->{offset},
         limit => $options->{limit},
         order_by => [{class => 'mous', field => 'usr'}]
@@ -4805,8 +4856,34 @@ __PACKAGE__->register_method(
     }
 );
 
+
+# KCLS JBAS-1554 
+# Dummy API calls to ease transition to new circ history API for BC.
+# Any calls to these deprecated circ history methods return 0 results.
+# TODO Remove these API calls once BC deployment is confirmed.
+__PACKAGE__->register_method(
+    method    => "user_visible_holds",
+    api_name  => "open-ils.actor.history.circ.visible",
+    stream => 1
+);
+__PACKAGE__->register_method(
+    method    => "user_visible_holds",
+    api_name  => "open-ils.actor.history.circ.visible.print",
+    stream => 1
+);
+__PACKAGE__->register_method(
+    method    => "user_visible_holds",
+    api_name  => "open-ils.actor.history.circ.visible.email",
+    stream => 1
+);
+
+
 sub user_visible_holds {
     my($self, $conn, $auth, $user_id, $options) = @_;
+
+    # KCLS JBAS-1554 
+    # TODO remove me.
+    return undef if ($self->api_name =~ /history.circ/);
 
     my $is_hold = 1;
     my $for_print = ($self->api_name =~ /print/);
@@ -5025,6 +5102,7 @@ __PACKAGE__->register_method(
 sub get_barcodes {
     my( $self, $client, $auth, $org_id, $context, $barcode ) = @_;
     my $e = new_editor(authtoken => $auth);
+
     return $e->event unless $e->checkauth;
     return $e->event unless $e->allowed('STAFF_LOGIN', $org_id);
 
@@ -5358,6 +5436,36 @@ sub filter_group_entry_crud {
         $entry->grp($entry->grp->id); # for consistency
         return $entry;
     }
+}
+
+# Handles stored messages for patrons
+
+__PACKAGE__->register_method(
+    method    => "patron_message_list",
+    api_name  => "open-ils.actor.patron_message_list",
+    signature => q/
+		Grabs a list of all pre-defined messages that can be sent to a patron.
+		/
+);
+
+# Gets the list of default messages
+sub patron_message_list {
+
+	my $message_ref = $U->storagereq('open-ils.storage.direct.action.patron_message_list');
+	my @message = @$message_ref;
+	my $stringtoSend;
+
+	foreach (@message) {
+
+		my @sub_message = @$_;
+
+		foreach (@sub_message) {
+
+			$stringtoSend .= $_ . "&SPLIT&";
+		}
+	}
+
+	return $stringtoSend;
 }
 
 1;

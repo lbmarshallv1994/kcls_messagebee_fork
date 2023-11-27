@@ -24,6 +24,10 @@ import {AcqCommonModule} from '../acq-common.module';
     AcqCommonModule
   ],
   providers: []
+    PicklistRoutingModule
+    // Needed for the lineite-list bits
+    PoService
+  ]
 })
 
 export class PicklistModule {}

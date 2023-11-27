@@ -37,6 +37,7 @@ import {BrowsePagerComponent} from './result/browse-pager.component';
 import {HttpClientModule} from '@angular/common/http';
 import {BarcodesModule} from '@eg/staff/share/barcodes/barcodes.module';
 import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
+import {AddedContentComponent} from './record/added-content.component';
 
 @NgModule({
   declarations: [
@@ -61,6 +62,7 @@ import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
     BrowseResultsComponent,
     ConjoinedComponent,
     HoldingsMaintenanceComponent,
+    AddedContentComponent,
     SearchTemplatesComponent,
     CnBrowseComponent,
     PreferencesComponent,

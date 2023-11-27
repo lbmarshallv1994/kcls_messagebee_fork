@@ -97,6 +97,9 @@ export class HoldComponent implements OnInit {
     // Orgs which are not valid pickup locations
     disableOrgs: number[] = [];
 
+    successCount = 0;
+    failCount = 0;
+
     @ViewChild('patronSearch', {static: false})
       patronSearch: PatronSearchDialogComponent;
 
@@ -138,8 +141,11 @@ export class HoldComponent implements OnInit {
         this.holdType = this.route.snapshot.params['type'];
         this.holdTargets = this.route.snapshot.queryParams['target'];
         this.holdFor = this.route.snapshot.queryParams['holdFor'] || 'patron';
+        this.userBarcode = this.route.snapshot.queryParams['holdForBarcode'];
 
-        if (this.staffCat.holdForBarcode) {
+        if (this.userBarcode) {
+            this.holdFor = 'patron';
+        } else if (this.staffCat.holdForBarcode) {
             this.holdFor = 'patron';
             this.userBarcode = this.staffCat.holdForBarcode;
         }
@@ -178,17 +184,12 @@ export class HoldComponent implements OnInit {
         this.requestor = this.auth.user();
         this.pickupLib = this.auth.user().ws_ou();
 
-        this.resetForm();
+        this.resetForm(true);
 
         this.getRequestorSetsAndPerms()
         .then(_ => {
 
             // Load receipient data if we have any.
-            if (this.staffCat.holdForBarcode) {
-                this.holdFor = 'patron';
-                this.userBarcode = this.staffCat.holdForBarcode;
-            }
-
             if (this.holdFor === 'staff' || this.userBarcode) {
                 this.holdForChanged();
             }
@@ -430,8 +431,8 @@ export class HoldComponent implements OnInit {
 
     resetRecipient(keepBarcode?: boolean) {
         this.user = null;
-        this.notifyEmail = true;
-        this.notifyPhone = true;
+        this.notifyEmail = false;
+        this.notifyPhone = false;
         this.notifySms = false;
         this.phoneValue = '';
         this.pickupLib = this.requestor.ws_ou();
@@ -451,6 +452,8 @@ export class HoldComponent implements OnInit {
     resetForm(keepBarcode?: boolean): Promise<any> {
         this.placeHoldsClicked = false;
         this.resetRecipient(keepBarcode);
+        this.successCount = 0;
+        this.failCount = 0;
 
         this.holdContexts = this.holdTargets.map(target => {
             const ctx = new HoldContext(target);
@@ -574,8 +577,17 @@ export class HoldComponent implements OnInit {
         // At least one hold attempted.  Confirm all succeeded
         // before resetting the recipient info in the form.
         let reset = true;
+
+        this.successCount = 0;
+        this.failCount = 0;
+
         this.holdContexts.forEach(ctx => {
-            if (!ctx.success) { reset = false; }
+            if (ctx.success) {
+                this.successCount++;
+            } else {
+                this.failCount++;
+                reset = false;
+            }
         });
 
         if (reset) { this.resetRecipient(); }
@@ -656,6 +668,14 @@ export class HoldComponent implements OnInit {
                         patron_id: this.user.id(),
                         user: this.user.family_name()
                     });
+
+                    // Overrides are processed one hold at a time, so
+                    // we have to invoke the post-holds logic here
+                    // instead of the batch placeHolds() method.  If
+                    // there is ever a batch override option, this
+                    // logic will have to be adjusted avoid callling
+                    // afterPlaceHolds in batch mode.
+                    if (override) { this.afterPlaceHolds(true); }
 
                 } else {
                     console.debug('hold failed with: ', request);
@@ -743,12 +763,21 @@ export class HoldComponent implements OnInit {
         }
     }
 
-    hasNoHistory(): boolean {
-        return history.length === 0;
+    hasHistory(): boolean {
+        return history.length > 0;
     }
 
     goBack() {
         history.back();
+    }
+
+    orgSn(thing: IdlObject, fromCn?: boolean): string {
+        if (!thing) { return ''; }
+        if (fromCn) {
+            return this.org.get(thing.owning_lib()).shortname();
+        } else {
+            return this.org.get(thing.circ_lib()).shortname();
+        }
     }
 }
 

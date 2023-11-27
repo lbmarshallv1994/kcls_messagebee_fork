@@ -1,4 +1,5 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Location} from '@angular/common';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
@@ -26,6 +27,11 @@ export class PurchaseOrderResultsComponent implements OnInit {
     cellTextGenerator: GridCellTextGenerator;
 
     fallbackSearchTerms: AcqSearchTerm[] = [{
+        field: 'acqpo:id',
+        op: '',
+        value1: '',
+        value2: ''
+/*      KCLS JBAS-3067
         field:  'acqpo:ordering_agency',
         op:     '',
         value1: this.auth.user() ? this.auth.user().ws_ou() : '',
@@ -35,11 +41,13 @@ export class PurchaseOrderResultsComponent implements OnInit {
         op:     '',
         value1: 'on-order',
         value2: ''
+*/
     }];
 
     constructor(
         private router: Router,
         private route: ActivatedRoute,
+        private ngLocation: Location,
         private net: NetService,
         private auth: AuthService,
         private acqSearch: AcqSearchService) {
@@ -55,7 +63,13 @@ export class PurchaseOrderResultsComponent implements OnInit {
     }
 
     showRow(row: any) {
-        window.open('/eg2/staff/acq/po/' + row.id(), '_blank');
+        const url = this.ngLocation.prepareExternalUrl(
+            this.router.serializeUrl(
+                this.router.createUrlTree(['/staff/acq/po/', row.id()])
+            )
+        );
+
+        window.open(url);
     }
 
     doSearch(search: AcqSearch) {

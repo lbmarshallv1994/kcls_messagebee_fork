@@ -8,12 +8,14 @@ import {AsnRoutingModule} from './routing.module';
 import {AsnService} from './asn.service';
 import {AsnComponent} from './asn.component';
 import {AsnReceiveComponent} from './receive.component';
+import {AsnReportComponent} from './report.component';
 
 
 @NgModule({
   declarations: [
     AsnComponent,
-    AsnReceiveComponent
+    AsnReceiveComponent,
+    AsnReportComponent
   ],
   imports: [
     StaffCommonModule,

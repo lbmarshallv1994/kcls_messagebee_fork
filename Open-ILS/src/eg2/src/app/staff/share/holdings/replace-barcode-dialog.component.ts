@@ -1,4 +1,4 @@
-import {Component, Input, ViewChild, Renderer2} from '@angular/core';
+import {Component, OnInit, Input, ViewChild} from '@angular/core';
 import {Observable} from 'rxjs';
 import {switchMap, map, tap} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
@@ -43,12 +43,17 @@ export class ReplaceBarcodeDialogComponent
     constructor(
         private modal: NgbModal, // required for passing to parent
         private toast: ToastService,
-        private auth: AuthService,
-        private net: NetService,
-        private evt: EventService,
-        private pcrud: PcrudService,
-        private renderer: Renderer2) {
+        private pcrud: PcrudService) {
         super(modal); // required for subclassing
+    }
+
+    ngOnInit() {
+        this.onOpen$.subscribe(_ => {
+            setTimeout(() => {
+                const node = document.getElementById('new-barcode-input');
+                if (node) { node.focus(); }
+            });
+        });
     }
 
     open(args: NgbModalOptions): Observable<boolean> {
@@ -56,17 +61,14 @@ export class ReplaceBarcodeDialogComponent
         this.numSucceeded = 0;
         this.numFailed = 0;
 
-        return this.getNextCopy()
-        .pipe(switchMap(() => super.open(args)),
-            tap(() =>
-                this.renderer.selectRootElement('#new-barcode-input').focus())
-        );
+        return this.getNextCopy().pipe(switchMap(() => super.open(args)));
     }
 
     getNextCopy(): Observable<any> {
 
         if (this.auth.opChangeIsActive()) {
-            // FIXME: kludge for now, opChange has been reverting mid-dialog with batch use when handling permission elevation
+            // FIXME: kludge for now, opChange has been reverting mid-dialog
+            // with batch use when handling permission elevation
             this.auth.undoOpChange();
         }
 

@@ -210,6 +210,16 @@ function($scope , $window , $location , egCore , egConfirmDialog) {
         }
     });
 
+    $scope.results_sort = 'pubdate';
+    egCore.hatch.getItem('eg.search.browse_sort_default').then(function(val) {
+        $scope.results_sort = val;
+    });
+    $scope.$watch('results_sort', function(newVal, oldVal) {
+        if (typeof newVal != 'undefined' && newVal != oldVal) {
+            egCore.hatch.setItem('eg.search.browse_sort_default', newVal);
+        }
+    });
+
     $scope.apply_sound = function() {
         if ($scope.disable_sound) {
             egCore.hatch.setItem('eg.audio.disable', true);
@@ -240,6 +250,11 @@ function($scope , egCore) {
     $scope.setContext = function(ctx) { 
         $scope.context = ctx; 
         $scope.isTestView = false;
+
+        let conf = $scope.printConfig[ctx];
+        if (conf && conf.printer) {
+            loadPrinterOptions(conf.printer);
+        }
     }
     $scope.setContext('default');
 

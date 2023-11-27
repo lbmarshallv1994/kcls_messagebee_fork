@@ -18,16 +18,19 @@ import {Pager} from '@eg/share/util/pager';
 import {CircService, CircDisplayInfo} from '@eg/staff/share/circ/circ.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
+import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {CreditCardDialogComponent
     } from '@eg/staff/share/billing/credit-card-dialog.component';
-import {BillingService, CreditCardPaymentParams} from '@eg/staff/share/billing/billing.service';
+import {BillingService, RefundablePaymentArgs,
+    CreditCardPaymentParams} from '@eg/staff/share/billing/billing.service';
 import {AddBillingDialogComponent} from '@eg/staff/share/billing/billing-dialog.component';
 import {AudioService} from '@eg/share/util/audio.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {WorkLogService} from '@eg/staff/share/worklog/worklog.service';
+import {LdapAuthDialogComponent} from '@eg/staff/share/billing/ldap-auth-dialog.component';
 
 @Component({
   templateUrl: 'bills.component.html',
@@ -42,7 +45,7 @@ export class BillsComponent implements OnInit, AfterViewInit {
     paymentType = 'cash_payment';
     checkNumber: string;
     paymentAmount: number;
-    annotatePayment = false;
+    annotatePayment = true;
     paymentNote: string;
     convertChangeToCredit = false;
     receiptOnPayment = false;
@@ -50,11 +53,13 @@ export class BillsComponent implements OnInit, AfterViewInit {
     numReceipts = 1;
     ccPaymentParams: CreditCardPaymentParams;
     disableAutoPrint = false;
+    registerActive = false;
 
     maxPayAmount = 100000;
     warnPayAmount = 1000;
     voidAmount = 0;
     refunding = false;
+    refundableArgs: RefundablePaymentArgs;
 
     gridDataSource: GridDataSource = new GridDataSource();
     cellTextGenerator: GridCellTextGenerator;
@@ -69,11 +74,14 @@ export class BillsComponent implements OnInit, AfterViewInit {
     @ViewChild('maxPayDialog') private maxPayDialog: AlertDialogComponent;
     @ViewChild('errorDialog') private errorDialog: AlertDialogComponent;
     @ViewChild('warnPayDialog') private warnPayDialog: ConfirmDialogComponent;
+    @ViewChild('registerConfirmDialog') private registerConfirmDialog: ConfirmDialogComponent;
     @ViewChild('voidBillsDialog') private voidBillsDialog: ConfirmDialogComponent;
     @ViewChild('refundDialog') private refundDialog: ConfirmDialogComponent;
     @ViewChild('adjustToZeroDialog') private adjustToZeroDialog: ConfirmDialogComponent;
     @ViewChild('creditCardDialog') private creditCardDialog: CreditCardDialogComponent;
     @ViewChild('billingDialog') private billingDialog: AddBillingDialogComponent;
+    @ViewChild('ldapAuthDialog') private ldapAuthDialog: LdapAuthDialogComponent;
+    @ViewChild('progress') private progress: ProgressDialogComponent;
 
     constructor(
         private router: Router,
@@ -106,7 +114,7 @@ export class BillsComponent implements OnInit, AfterViewInit {
                 }
             }
             return '';
-        };
+        }
 
         this.cellTextGenerator = {
             title: row => row.title,
@@ -173,6 +181,7 @@ export class BillsComponent implements OnInit, AfterViewInit {
 
     loadSettings(): Promise<any> {
         return this.serverStore.getItemBatch([
+            'circ.external_register.active', // KCLS
             'ui.circ.billing.amount_warn',
             'ui.circ.billing.amount_limit',
             'circ.staff_client.do_not_auto_attempt_print',
@@ -183,13 +192,18 @@ export class BillsComponent implements OnInit, AfterViewInit {
             this.maxPayAmount = sets['ui.circ.billing.amount_limit'] || 100000;
             this.warnPayAmount = sets['ui.circ.billing.amount_warn'] || 1000;
             this.receiptOnPayment = sets['circ.bills.receiptonpay'];
-            this.annotatePayment = sets['eg.circ.bills.annotatepayment'];
+            // this.annotatePayment = sets['eg.circ.bills.annotatepayment'];
+            this.registerActive = sets['circ.external_register.active'];
 
             const noPrint = sets['circ.staff_client.do_not_auto_attempt_print'];
             if (noPrint && noPrint.includes('Bill Pay')) {
                 this.disableAutoPrint = true;
             }
         });
+    }
+
+    registerIsActive(): boolean {
+        return this.registerActive && this.paymentType !== 'forgive_payment';
     }
 
     applySetting(name: string, value: any) {
@@ -306,9 +320,13 @@ export class BillsComponent implements OnInit, AfterViewInit {
         this.applyingPayment = true;
         this.paymentNote = '';
         this.ccPaymentParams = {};
+        this.refundableArgs = null;
         const payments = this.compilePayments();
+        const checkNum = this.registerIsActive() ? 'VOUCHER' : this.checkNumber;
 
-        this.verifyPayAmount()
+        this.confirmRegisterPayment()
+        .then(_ => this.handleLostPaymentAuth())
+        .then(_ => this.verifyPayAmount())
         .then(_ => this.annotate())
         .then(_ => this.getCcParams())
         .then(_ => {
@@ -318,9 +336,10 @@ export class BillsComponent implements OnInit, AfterViewInit {
                 this.paymentType,
                 payments,
                 this.paymentNote,
-                this.checkNumber,
+                checkNum,
                 this.ccPaymentParams,
-                this.convertChangeToCredit ? this.pendingChange() : null
+                this.convertChangeToCredit ? this.pendingChange() : null,
+                this.refundableArgs
             );
         })
         .then(resp => {
@@ -354,6 +373,71 @@ export class BillsComponent implements OnInit, AfterViewInit {
         });
     }
 
+
+    handleLostPaymentAuth(): Promise<any> {
+
+        // We have already requested authentication for a register-active
+        // scenario.  No need to collect lost payment data.
+        if (this.refundableArgs) { return Promise.resolve(); }
+
+        // TODO
+        return Promise.resolve();
+    }
+
+
+    // KCLS warn the user that registers are active and payments should
+    // only be made for certain scenarios.
+    confirmRegisterPayment(): Promise<string> {
+        if (!this.registerIsActive()) { return Promise.resolve(null); }
+
+        return this.registerConfirmDialog.open().toPromise()
+        .then(confirmed => {
+            if (confirmed) {
+                return this.checkSecondaryAuth().then(
+                    res => res,
+                    err => Promise.reject(err)
+                );
+            } else {
+                return Promise.reject('Register confirmation rejected');
+            }
+        });
+    }
+
+    checkSecondaryAuth(resolve?: any, reject?: any): Promise<any> {
+
+        let promise;
+        if (!resolve) {
+            promise = new Promise((res, rej) => {
+                resolve = res;
+                reject = rej;
+            });
+        }
+
+        this.ldapAuthDialog.open().toPromise()
+        .then(args => {
+            if (args) {
+                return this.billing.getLdapAuthKey(args.username, args.password);
+            } else {
+                return Promise.reject('LDAP dialog canceled');
+            }
+        })
+        .then(
+            authKey => {
+                if (authKey) {
+                    // Secondary auth succeeded.
+                    this.refundableArgs = {secondary_auth_key: authKey};
+                    resolve(authKey);
+                } else {
+                    // LDAP auth failed, try again.
+                    return this.checkSecondaryAuth(resolve, reject);
+                }
+            },
+            err => reject(err)
+        );
+
+        return promise;
+    }
+
     compilePayments(): Array<Array<number>> { // [ [xactId, payAmount], ... ]
         const payments = [];
         this.gridDataSource.data.forEach(row => {
@@ -379,6 +463,16 @@ export class BillsComponent implements OnInit, AfterViewInit {
             return Promise.resolve();
         }
 
+        // Skip the CC dialog when registers are active, because such
+        // payments are generally made after the fact as a payment vouncher.
+        if (this.registerIsActive())  {
+            this.ccPaymentParams = {
+                processor: 'VOUCHER',
+                approval_code: 'VOUCHER'
+            };
+            return Promise.resolve();
+        }
+
         return this.creditCardDialog.open().toPromise().then(ccArgs => {
             if (ccArgs) {
                 this.ccPaymentParams = ccArgs;
@@ -401,7 +495,10 @@ export class BillsComponent implements OnInit, AfterViewInit {
     }
 
     annotate(): Promise<any> {
-        if (!this.annotatePayment) { return Promise.resolve(); }
+        // Always annotate in register mode.
+        if (!this.annotatePayment && !this.registerIsActive()) {
+            return Promise.resolve();
+        }
 
         return this.annotateDialog.open().toPromise()
         .then(value => {
@@ -609,15 +706,22 @@ export class BillsComponent implements OnInit, AfterViewInit {
         this.adjustToZeroDialog.open().subscribe(confirmed => {
             if (!confirmed) { return; }
 
-            this.net.request(
-                'open-ils.circ',
-                'open-ils.circ.money.billable_xact.adjust_to_zero',
-                this.auth.token(), xactIds
-            ).subscribe(resp => {
-                if (!this.reportError(resp)) {
-                    this.context.refreshPatron()
-                    .then(_ => this.billGrid.reload());
+            return this.annotateDialog.open().toPromise()
+            .then(note => {
+                if (!note) {
+                    return Promise.reject('Annotation required');
                 }
+
+                this.net.request(
+                    'open-ils.circ',
+                    'open-ils.circ.money.billable_xact.adjust_to_zero',
+                    this.auth.token(), xactIds, note
+                ).subscribe(resp => {
+                    if (!this.reportError(resp)) {
+                        this.context.refreshPatron()
+                        .then(_ => this.billGrid.reload());
+                    }
+                });
             });
         });
     }
@@ -655,6 +759,13 @@ export class BillsComponent implements OnInit, AfterViewInit {
         if (!row) { return; }
         this.router.navigate(['/staff/circ/patron',
             this.patronId, 'bills', row.id, 'statement']);
+    }
+
+    printLostPaid(rows: any[]) {
+        const xactId = rows.map(x => x.id)[0];
+        if (!xactId) { return; }
+        this.progress.open();
+        this.context.printLostPaid(xactId).then(_ => this.progress.close());
     }
 }
 

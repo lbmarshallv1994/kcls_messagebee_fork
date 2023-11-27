@@ -112,6 +112,8 @@ angular.module('egCoreMod')
                     return egLovefield.cannotConnect;
                 }
 
+                $scope.host = $window.location.hostname;
+
                 egCore.startup.go().then(
                     function() {
                         if (egCore.auth.user()) {

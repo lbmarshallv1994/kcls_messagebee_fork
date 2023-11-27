@@ -64,6 +64,11 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
     }
 
     ngOnInit() {
+        if (this.initialGroupId) {
+            // Sometimes we need to coerce
+            this.initialGroupId = Number(this.initialGroupId);
+        }
+
         this.collectGroups().then(grps => this.sortGroups(grps))
         .then(_ => this.fetchInitialGroup())
         .then(_ => this.cbox.selectedId = this.initialGroupId);

@@ -1,4 +1,5 @@
 import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
+import {Location} from '@angular/common';
 import {throwError} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
@@ -29,6 +30,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
     newBucketName: string;
     newBucketDesc: string;
     buckets: any[];
+    openBucket = false;
 
     @Input() bucketClass: 'biblio' | 'user' | 'callnumber' | 'copy';
     @Input() bucketType: string; // e.g. staff_client
@@ -48,6 +50,7 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
 
     constructor(
         private modal: NgbModal, // required for passing to parent
+        private ngLocation: Location,
         private renderer: Renderer2,
         private toast: ToastService,
         private idl: IdlService,
@@ -217,9 +220,16 @@ export class BucketDialogComponent extends DialogComponent implements OnInit {
             if (evt) {
                 this.toast.danger(evt.toString());
             } else {
-                this.close();
+                this.postAdd(bucketId);
             }
         });
+    }
+
+    postAdd(bucketId: number) {
+        this.close();
+        if (this.openBucket) {
+            window.open('/eg/staff/cat/bucket/record/view/' + bucketId);
+        }
     }
 }
 

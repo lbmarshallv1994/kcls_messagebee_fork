@@ -22,11 +22,17 @@ export interface CreditCardPaymentParams {
     billing_state?: string;
     billing_zip?: string;
     note?: string;
+    processor?: string;
 }
 
 interface PaymentResponse {
     payments: number[];
     last_xact_id: string;
+}
+
+export interface RefundablePaymentArgs {
+    secondary_auth_key: string;
+    transactions?: number[];
 }
 
 @Injectable()
@@ -78,7 +84,9 @@ export class BillingService {
         paymentNote?: string,
         checkNumber?: string,
         creditCardParams?: CreditCardPaymentParams,
-        addPatronCredit?: number): Promise<PaymentResponse> {
+        addPatronCredit?: number,
+        refundableArgs?: RefundablePaymentArgs
+    ): Promise<PaymentResponse> {
 
        return this.net.request(
             'open-ils.circ',
@@ -90,7 +98,13 @@ export class BillingService {
                 check_number: checkNumber,
                 payments: payments,
                 patron_credit: addPatronCredit,
-                cc_args: creditCardParams
+                cc_args: creditCardParams,
+                refundable_args: refundableArgs,
+                // Clone the 2ndry auth key onto the top-level payment
+                // object for registerIsActive() payments which may or may
+                // not include LOST item payments.
+                secondary_auth_key: refundableArgs ?
+                    refundableArgs.secondary_auth_key : null,
             }, patronLastXactId).toPromise()
 
         .then(response => {
@@ -102,6 +116,31 @@ export class BillingService {
             }
 
             return response;
+        });
+    }
+
+    getLdapAuthKey(username: string, password: string): Promise<string> {
+
+        return this.net.request(
+            'open-ils.circ',
+            'open-ils.circ.staff.secondary_auth.ldap',
+            this.auth.token(), username, password).toPromise()
+        .then(result => {
+            const evt = this.evt.parse(result);
+            console.debug('2nd auth returned', result);
+
+            if (evt) {
+                if (evt.textcode === 'LDAP_AUTH_FAILED') {
+                    console.warn('Secondary auth failed for ' + username);
+                } else {
+                    alert(evt);
+                }
+            } else if (typeof result === 'string') {
+                console.debug('Secondary auth succeeded with ' + result);
+                return result;
+            }
+
+            return null;
         });
     }
 }

@@ -188,7 +188,7 @@ sub retrieve_core {
                 $content, $remote_file, $server, $account->id
             );
 
-            push @return, @$incoming;
+            push @return, @$incoming if $incoming;
         }
     }
     return \@return;
@@ -734,6 +734,11 @@ sub process_parsed_msg {
                 $logger->info("EDI: LI $li_id -- $qty_count in transit");
                 next;
             }
+
+            if ($qty_code eq '83') {
+                $logger->info("EDI: LI $li_id -- backordered $qty_count");
+                next;
+            }
             # 84: urgent delivery
             # 118: quantity manifested
             # ...
@@ -798,7 +803,7 @@ sub process_parsed_msg {
                     if ($stat eq '200') { 
                         $reason_id = 1007; # not accepted
 
-                    } elsif ($stat eq '400') { 
+                    } elsif ($stat eq '401') { 
                         $reason_id = 1283; # back-order
                     }
 
@@ -1245,20 +1250,30 @@ sub extract_shipment_notification_entries {
             my $ident = $ident_spec->{value};
             next unless $ident;
 
-            my $li_id_hash = $e->json_query({
+            my $li_id_hash_arr = $e->json_query({
                 select => {jub => ['id']},
                 from => {
                     jub => {
                         acqlia => {
                             filter => {
-                                order_ident => 't', 
                                 attr_value => $ident
                             }
                         }
                     }
                 },
-                where => {'+jub' => {purchase_order => $po_id}}
-            })->[0];
+                where => {'+jub' => {purchase_order => $po_id}},
+                # Search all matching attrs, but use the one marked as the order
+                # identifier if we can find one.
+                order_by => [{
+                    class => 'acqlia', 
+                    field => 'order_ident', 
+                    direction => 'desc'
+                }]
+            });
+
+            # Protect against po_id's that are not numeric and cause
+            # query failure.
+            my $li_id_hash = $li_id_hash_arr ? $li_id_hash_arr->[0] : undef;
 
             if ($li_id_hash) {
                 $li_id = $li_id_hash->{id};

@@ -4,6 +4,7 @@ import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
+import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
   templateUrl: 'notes.component.html',
@@ -48,6 +49,8 @@ export class PoNotesComponent implements AfterViewInit {
             if (resp.note) {
                 this.po.notes().unshift(resp.note);
             }
+            this.vendorPublic = false;
+            this.noteText = '';
         });
     }
 

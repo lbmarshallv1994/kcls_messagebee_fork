@@ -1,8 +1,9 @@
 import {Component, Input, ViewChild, OnInit} from '@angular/core';
+import {Location} from '@angular/common';
 import {EMPTY} from 'rxjs';
 import {map, tap, concatMap} from 'rxjs/operators';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
@@ -35,6 +36,7 @@ export class NegativeBalancesComponent implements OnInit {
         private net: NetService,
         private pcrud: PcrudService,
         private strings: StringService,
+        private ngLocation: Location,
         private toast: ToastService
     ) {}
 
@@ -71,5 +73,11 @@ export class NegativeBalancesComponent implements OnInit {
             this.contextOrg = org;
             this.grid.reload();
         }
+    }
+
+    rowActivated(patron: any) {
+        const url = this.ngLocation.prepareExternalUrl(
+          `/staff/circ/patron/${patron.id()}/`);
+        window.open(url);
     }
 }

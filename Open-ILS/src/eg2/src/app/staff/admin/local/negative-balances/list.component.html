@@ -14,12 +14,13 @@
 </div>
 
 <ng-template #barcodeTmpl let-user="row">
-  <a target="_blank" href="/eg/staff/circ/patron/{{user.id()}}/checkout">
+  <a target="_blank" routerLink="/staff/circ/patron/{{user.id()}}/checkout">
     {{user.card().barcode()}}
   </a>
 </ng-template>
 
 <eg-grid #grid idlClass="au" [dataSource]="dataSource"
+  (onRowActivate)="rowActivated($event)"
   persistKey="admin.local.negative_balances"
   showFields="balance_owed,last_billing_activity,barcode,family_name,first_given_name,dob,barred">
 

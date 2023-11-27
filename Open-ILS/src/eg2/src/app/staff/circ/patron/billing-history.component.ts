@@ -1,7 +1,7 @@
 import {Component, Input, OnInit, AfterViewInit, ViewChild} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {from, empty, range} from 'rxjs';
-import {concatMap, tap, takeLast} from 'rxjs/operators';
+import {map, concatMap, tap, takeLast} from 'rxjs/operators';
 import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
@@ -19,6 +19,7 @@ import {Pager} from '@eg/share/util/pager';
 import {CircService, CircDisplayInfo} from '@eg/staff/share/circ/circ.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
+import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {BillingService} from '@eg/staff/share/billing/billing.service';
@@ -51,6 +52,7 @@ export class BillingHistoryComponent implements OnInit {
     @ViewChild('xactsGrid') private xactsGrid: GridComponent;
     @ViewChild('paymentsGrid') private paymentsGrid: GridComponent;
     @ViewChild('billingDialog') private billingDialog: AddBillingDialogComponent;
+    @ViewChild('progress') private progress: ProgressDialogComponent;
 
     constructor(
         private router: Router,
@@ -93,6 +95,9 @@ export class BillingHistoryComponent implements OnInit {
             const query: any = {
                usr: this.patronId,
                xact_start: {between: [this.xactsStart, this.xactsEnd]},
+               xact_start: {between:
+                    [this.xactsStart, this.getNextDate(this.xactsEnd)]
+                },
                '-or': [
                     {balance_owed: {'<>': 0}},
                     {last_payment_ts: {'<>': null}}
@@ -100,13 +105,19 @@ export class BillingHistoryComponent implements OnInit {
             };
 
             return this.flatData.getRows(
-                this.xactsGrid.context, query, pager, sort);
+                this.xactsGrid.context, query, pager, sort)
+            .pipe(map(payment => {
+                //payment.title = this.unpackTitle(payment);
+                return payment;
+            }));
         };
 
         this.paymentsDataSource.getRows = (pager: Pager, sort: any[]) => {
             const query: any = {
-               'xact.usr': this.patronId,
-               payment_ts: {between: [this.paymentsStart, this.paymentsEnd]},
+                'xact.usr': this.patronId,
+                payment_ts: {between:
+                    [this.paymentsStart, this.getNextDate(this.paymentsEnd)]
+                },
             };
 
             if (sort.length === 0) {
@@ -114,25 +125,38 @@ export class BillingHistoryComponent implements OnInit {
             }
 
             return this.flatData.getRows(
-                this.paymentsGrid.context, query, pager, sort);
+                this.paymentsGrid.context, query, pager, sort)
+            .pipe(map(payment => {
+                //payment.title = this.unpackTitle(payment);
+                return payment;
+            }));
         };
     }
 
-    dateChange(which: string, d: Date) {
+    unpackTitle(row: any): string {
+        // Wide display entry titles are JSON-encoded.
+        return row.title ? JSON.parse(row.title) : '';
+    }
 
-        if (which.match(/End/)) {
-            // Add a day to the end date so the DB query includes all of
-            // the selected date.
-            d.setDate(d.getDate() + 1);
-        }
+    reloading(): boolean {
+        return (
+            this.xactsDataSource.requestingData ||
+            this.paymentsDataSource.requestingData
+        );
+    }
 
-        this[which] = DateUtil.localYmdFromDate(d);
+    getNextDate(ymd: string): string {
+        const d = DateUtil.localDateFromYmd(ymd);
+        d.setDate(d.getDate() + 1);
+        return DateUtil.localYmdFromDate(d);
+    }
 
-        if (which.match(/xacts/)) {
-            this.xactsGrid.reload();
-        } else {
-            this.paymentsGrid.reload();
-        }
+    refreshXacts() {
+        this.xactsGrid.reload();
+    }
+
+    refreshPayments() {
+        this.paymentsGrid.reload();
     }
 
     beforeTabChange(evt: NgbNavChangeEvent) {
@@ -180,7 +204,17 @@ export class BillingHistoryComponent implements OnInit {
         this.printer.print({
             templateName: 'bills_historical',
             contextData: {xacts: rows},
-            printContext: 'default'
+            printContext: 'receipt'
+        });
+    }
+
+    printPayments(rows: any) {
+        if (rows.length === 0) { return; }
+
+        this.printer.print({
+            templateName: 'payments_historical',
+            contextData: {payments: rows},
+            printContext: 'receipt'
         });
     }
 
@@ -218,6 +252,17 @@ export class BillingHistoryComponent implements OnInit {
         info.paid /= 100;
 
         return info;
+    }
+
+    printLostPaid(rows: any[]) {
+        let promise = Promise.resolve();
+        rows.forEach(row => {
+            promise = promise.then(_ => {
+                this.progress.open();
+                return this.context.printLostPaidByPayment(row.id)
+                .then(_ => this.progress.close());
+            });
+        });
     }
 }
 

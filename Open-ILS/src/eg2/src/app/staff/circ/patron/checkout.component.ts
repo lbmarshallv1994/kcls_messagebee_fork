@@ -26,6 +26,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {AuthService} from '@eg/core/auth.service';
 import {PrintService} from '@eg/share/print/print.service';
+import {DateUtil} from '@eg/share/util/date';
 
 const SESSION_DUE_DATE = 'eg.circ.checkout.is_until_logout';
 
@@ -41,9 +42,9 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
     checkoutBarcode = '';
     gridDataSource: GridDataSource = new GridDataSource();
     cellTextGenerator: GridCellTextGenerator;
+    dueDateYmd: string;
     dueDate: string;
     dueDateOptions: 0 | 1 | 2 = 0; // auto date; specific date; session date
-    dueDateInvalid = false;
     printOnComplete = true;
     strictBarcode = false;
 
@@ -89,6 +90,12 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
 
         if (this.store.getSessionItem(SESSION_DUE_DATE)) {
             this.dueDate = this.store.getSessionItem('eg.circ.checkout.due_date');
+            if (this.dueDate) {
+                this.dueDateYmd =
+                    DateUtil.localYmdFromDate(new Date(Date.parse(this.dueDate)));
+            } else {
+                this.dueDateYmd = DateUtil.localYmdFromDate(); // Today
+            }
             this.toggleDateOptions(2);
         }
 
@@ -155,10 +162,6 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
     }
 
     checkout(params?: CheckoutParams, override?: boolean): Promise<CheckoutResult> {
-
-        if (this.dueDateInvalid) {
-            return Promise.resolve(null);
-        }
 
         let barcode;
         const promise = params ? Promise.resolve(params) : this.collectParams();
@@ -260,10 +263,9 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
         }));
     }
 
-    setDueDate(iso: string) {
-        const date = new Date(Date.parse(iso));
-        this.dueDateInvalid = (date < new Date());
-        this.dueDate = iso;
+    setDueDate(ymd: string) {
+        this.dueDateYmd = ymd;
+        this.dueDate = DateUtil.localDateFromYmd(ymd).toISOString();
         this.store.setSessionItem('eg.circ.checkout.due_date', this.dueDate);
     }
 
@@ -382,7 +384,10 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
     }
 
     printReceipt(redirect?: boolean) {
-        if (this.context.checkouts.length === 0) { return; }
+        if (this.context.checkouts.length === 0) {
+            if (redirect) { this.doneRedirect(); }
+            return;
+        }
 
         if (redirect) {
             // Wait for the print job to be queued before redirecting

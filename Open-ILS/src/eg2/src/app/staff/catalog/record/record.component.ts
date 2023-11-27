@@ -89,6 +89,11 @@ export class RecordComponent implements OnInit {
         // prevent tab changing until after route navigation
         evt.preventDefault();
 
+        if (evt.nextId === 'default') {
+            this.setDefaultTab();
+            return;
+        }
+
         // Protect against tab changes with dirty data.
         this.canDeactivate().then(ok => {
             if (ok) {
@@ -154,8 +159,8 @@ export class RecordComponent implements OnInit {
         this.summary = null;
         this.bib.getBibSummary(
             this.recordId,
-            this.searchContext.searchOrg.id(),
-            this.searchContext.isStaff).toPromise()
+            this.searchContext.searchOrg.id(), true, {flesh_synopsis: true}
+        ).toPromise()
         .then(summary => {
             this.summary =
                 this.staffCat.currentDetailRecordSummary = summary;
@@ -177,6 +182,24 @@ export class RecordComponent implements OnInit {
         }
 
         return this.summary;
+    }
+
+    bibSubjects(): string[] {
+        if (!this.summary) { return []; }
+        return this.summary.display.subject.sort();
+    }
+
+    // These should be de-duped on the server, but no dice.
+    bibSeries(): string[] {
+        if (!this.summary) { return []; }
+        const series = [];
+        this.summary.display.series_title.sort().forEach(s => {
+            if (!series.includes(s)) {
+                series.push(s);
+            }
+        });
+
+        return series;
     }
 
     currentSearchOrg(): IdlObject {

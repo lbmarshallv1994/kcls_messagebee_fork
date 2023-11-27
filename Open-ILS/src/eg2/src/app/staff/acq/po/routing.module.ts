@@ -64,6 +64,12 @@ const routes: Routes = [{
     path: 'lineitem/:lineitemId/worksheet',
     component: LineitemWorksheetComponent
   }, {
+    path: 'lineitem/:lineitemId/worksheet/print',
+    component: LineitemWorksheetComponent
+  }, {
+    path: 'lineitem/:lineitemId/worksheet/print/close',
+    component: LineitemWorksheetComponent
+  }, {
     path: 'printer',
     component: PrintComponent
   }, {

@@ -9,14 +9,18 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {ItemLocationService} from '@eg/share/item-location-select/item-location-select.service';
 import {saveAs} from 'file-saver';
 import {LineitemAlertDialogComponent} from './lineitem-alert-dialog.component';
+import {EgEvent, EventService} from '@eg/core/event.service';
 
 const LINEITEM_DISPOSITIONS:
     'new' | 'selector-ready' | 'order-ready' | 'pending-order' | 'on-order' | 'received' | 'delayed' = null;
+
 export type LINEITEM_DISPOSITION = typeof LINEITEM_DISPOSITIONS;
 
 const COPY_ORDER_DISPOSITIONS:
     'canceled' | 'delayed' | 'received' | 'on-order' | 'pre-order' = null;
+
 export type COPY_ORDER_DISPOSITION = typeof COPY_ORDER_DISPOSITIONS;
+
 const ORDER_IDENT_ATTRS = [
     'isbn',
     'issn',
@@ -93,6 +97,7 @@ export class LineitemService {
 
     constructor(
         private idl: IdlService,
+        private evt: EventService,
         private net: NetService,
         private auth: AuthService,
         private pcrud: PcrudService,
@@ -269,7 +274,7 @@ export class LineitemService {
     }
 
     applyBatchNote(liIds: number[],
-        noteValue: string, vendorPublic: boolean): Promise<any> {
+        noteValue: string, vendorPublic: boolean, alertEntry?: number): Promise<any> {
 
         if (!noteValue || liIds.length === 0) { return Promise.resolve(); }
 
@@ -280,6 +285,9 @@ export class LineitemService {
             note.lineitem(id);
             note.value(noteValue);
             note.vendor_public(vendorPublic ? 't' : 'f');
+            if (alertEntry) {
+                note.alert_text(alertEntry);
+            }
             notes.push(note);
         });
 
@@ -400,7 +408,7 @@ export class LineitemService {
         .pipe(tap(loc => {
             this.loc.locationCache[loc.id()] = loc;
             this.batchOptionWanted.emit({location:
-                {id: loc.id(), label: loc.name(), fm: loc}});
+                {id: loc.id(), label: loc.name(), fm: loc, userdata: loc}});
         })).toPromise();
     }
 

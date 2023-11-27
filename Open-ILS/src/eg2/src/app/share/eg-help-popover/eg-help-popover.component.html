@@ -4,7 +4,7 @@
 </ng-template>
 <button class="btn {{buttonClass}}" placement="{{placement}}" 
   [ngbPopover]="popContent" triggers="click" aria-haspopup="true"
-  i18n-title title="Show help" i18n-aria-label aria-label="Show help">
+  i18n-aria-label aria-label="Show help" aria-haspopup="true">
   <span class="material-icons mat-icon-shrunk-in-button" 
-    aria-hidden="true">live_help</span>
+    i18n-aria-label aria-label="Show help">live_help</span>
 </button>

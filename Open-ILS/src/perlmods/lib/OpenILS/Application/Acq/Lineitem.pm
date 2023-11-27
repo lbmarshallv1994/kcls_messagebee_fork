@@ -159,7 +159,8 @@ sub retrieve_lineitem_impl {
         flesh_fields => {
             jub => ['purchase_order', 'picklist'], # needed for permission check
             acqlid => [],
-            acqlin => []
+            acqlin => [],
+            acp => []
         }
     };
 
@@ -177,6 +178,11 @@ sub retrieve_lineitem_impl {
     push(@{$fields->{jub}   },        'editor') if $$options{flesh_editor};
     push(@{$fields->{jub}   },      'selector') if $$options{flesh_selector};
 
+    if ($$options{flesh_distribution_formulas}) {
+        push(@{$fields->{jub}}, 'distribution_formulas');
+        $fields->{acqdfa} = ['formula'];
+    }
+
     if ($$options{flesh_formulas}) {
         push(@{$fields->{jub}},    'distribution_formulas');
         push(@{$fields->{acqdfa}}, 'formula');
@@ -188,14 +194,21 @@ sub retrieve_lineitem_impl {
         push(@{$fields->{acqlid}}, 'fund'         ) if $$options{flesh_fund};
         push(@{$fields->{acqlid}}, 'fund_debit'   ) if $$options{flesh_fund_debit};
         push(@{$fields->{acqlid}}, 'cancel_reason') if $$options{flesh_cancel_reason};
+
+        # Some of these are doubled-up due to parallel evolution.
+        # Leaving both in place to be safe.
+        push(@{$fields->{acqlid}}, 'eg_copy_id') if $$options{flesh_copies};
+        push(@{$fields->{acqlid}}, 'eg_copy_id') if $$options{flesh_li_details_copy};
+
+        push(@{$fields->{acqlid}}, 'location') if $$options{flesh_li_details_location};
+        push(@{$fields->{acqlid}}, 'location') if $$options{flesh_location};
+
+        push(@{$fields->{acqlid}}, 'receiver') if $$options{flesh_li_details_receiver};
         push(@{$fields->{acqlid}}, 'circ_modifier') if $$options{flesh_circ_modifier};
-        push(@{$fields->{acqlid}}, 'location')      if $$options{flesh_location};
-        if ($$options{flesh_copies}) {
-            push(@{$fields->{acqlid}}, 'eg_copy_id');
-            push(@{$fields->{acp}},    'call_number') if $$options{flesh_call_number};
-            push(@{$fields->{acp}},    'location')    if $$options{flesh_copy_location};
-        }
-        push(@{$fields->{acqlid}}, 'receiver')      if $$options{flesh_li_details_receiver};
+
+        push(@{$fields->{acp}}, 'status') if $$options{flesh_li_details_copy};
+        push(@{$fields->{acp}}, 'call_number') if $$options{flesh_li_details_copy};
+        push(@{$fields->{acp}}, 'location') if $$options{flesh_li_details_location};
     }
 
     if($$options{clear_marc}) { # avoid fetching marc blob
@@ -272,13 +285,9 @@ sub retrieve_lineitem_batch {
     return $e->die_event unless $e->checkauth;
 
     for my $li_id (@$li_ids) {
-        my $li = retrieve_lineitem_impl($e, $li_id, $options);
-
-        set_default_order_ident($self, $e, $options, $li);
-
         $client->respond({
             id => $li_id,
-            lineitem => $li,
+            lineitem => retrieve_lineitem_impl($e, $li_id, $options),
             existing_copies => $AC->li_existing_copies($e, $li_id)
         });
     }
@@ -307,7 +316,6 @@ sub set_default_order_ident {
 
     push(@{$li->attributes}, $ident_attr);
 }
-
 
 
 __PACKAGE__->register_method(
@@ -478,6 +486,7 @@ sub lineitem_search {
 }
 
 __PACKAGE__->register_method (
+    # TODO: Authoritative-ify
     method    => 'lineitems_related_by_bib',
     api_name  => 'open-ils.acq.lineitems_for_bib.by_bib_id',
     stream    => 1,
@@ -544,7 +553,7 @@ sub lineitems_related_by_bib {
     }
 
     if ($options && defined $options->{lineitem_state}) {
-        $query->{'where'}{'jub'}{'state'} = $options->{lineitem_state};
+        $query->{'where'}{'+jub'}{'state'} = $options->{lineitem_state};
     }
 
     if ($options && defined $options->{po_state}) {
@@ -979,6 +988,34 @@ sub get_lineitem_attr_defs {
     return \%results;
 }
 
+
+__PACKAGE__->register_method(
+	method    => 'get_lineitem_notes_by_id',
+	api_name  => 'open-ils.acq.get_lineitem_notes_by_id',
+	signature => {
+		desc   => 'Retrieve lineitem notes by id',
+		params => [ 
+			{ desc => 'Authentication token', type => 'string' },
+			{ desc => 'Id of lineitem to retrive notes for', type => 'number'},
+		],
+		return =>
+			{ desc => 'List of notes sorted by edit date' }
+	}
+);
+
+sub get_lineitem_notes_by_id {
+	my($self, $conn, $auth, $lineitem_id) = @_;
+	
+	my $editor = new_editor(authtoken => $auth);
+	my $results = $editor->json_query({
+		'select' => { 'acqlin' => ['value', 'edit_time'] },
+		'from' => 'acqlin',
+		'where' => { lineitem => $lineitem_id },
+		'order_by' => [{ 'class'=>'acqlin', 'field'=>'edit_time', 'direction'=>'desc' }]
+		});
+	
+	return $results;
+}
 
 __PACKAGE__->register_method(
     method    => 'lineitem_note_CUD_batch',

@@ -36,7 +36,11 @@ interface OrgDisplay {
 
 @Component({
   selector: 'eg-org-select',
-  templateUrl: './org-select.component.html'
+  templateUrl: './org-select.component.html',
+  styles: [`
+    .icons {margin-left:-18px}
+    .material-icons {font-size: 16px;font-weight:bold}
+  `],
 })
 export class OrgSelectComponent implements OnInit {
     static domId = 0;
@@ -146,6 +150,9 @@ export class OrgSelectComponent implements OnInit {
     // in the selector.
     @Input() orgClassCallback: (orgId: number) => string;
 
+    // Make the input a wee bit less paddy
+    @Input() smallFormControl = false;
+
     // Emitted when the org unit value is changed via the selector.
     // Does not fire on initialOrg
     @Output() onChange = new EventEmitter<IdlObject>();
@@ -156,6 +163,9 @@ export class OrgSelectComponent implements OnInit {
     // detect when the selector is done with all of its automated
     // underground shuffling and landed on a value.
     @Output() componentLoaded: EventEmitter<void> = new EventEmitter<void>();
+
+    // Emitted when (keyup.enter) is fired on the input.
+    @Output() keyUpEnter: EventEmitter<void> = new EventEmitter<void>();
 
     // convenience method to get an IdlObject representing the current
     // selected org unit. One way of invoking this is via a template
@@ -308,14 +318,21 @@ export class OrgSelectComponent implements OnInit {
     orgChanged(selEvent: NgbTypeaheadSelectItemEvent) {
         // console.debug('org unit change occurred ' + selEvent.item);
         this.onChange.emit(this.org.get(selEvent.item.id));
+        this.saveCurrentSetting(selEvent.item.id);
+    }
 
-        if (this.persistKey && this.valueFromSetting !== selEvent.item.id) {
-            // persistKey is active.  Update the persisted value when changed.
+    saveCurrentSetting(orgId?: number): Promise<any> {
+        if (!this.persistKey) { return Promise.resolve(null); }
 
-            const key = `eg.orgselect.${this.persistKey}`;
-            this.valueFromSetting = selEvent.item.id;
-            this.serverStore.setItem(key, this.valueFromSetting);
-        }
+        if (!orgId) { this.selectedOrgId(); }
+
+        if (this.valueFromSetting === orgId) { return Promise.resolve(null); }
+
+        // persistKey is active.  Update the persisted value when changed.
+
+        const key = `eg.orgselect.${this.persistKey}`;
+        this.valueFromSetting = orgId;
+        return this.serverStore.setItem(key, orgId);
     }
 
     // Remove the tree-padding spaces when matching.

@@ -1,4 +1,5 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Location} from '@angular/common';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
@@ -58,6 +59,7 @@ export class PicklistResultsComponent implements OnInit {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
+        private ngLocation: Location,
         private toast: ToastService,
         private net: NetService,
         private auth: AuthService,
@@ -130,7 +132,13 @@ export class PicklistResultsComponent implements OnInit {
     }
 
     showRow(row: any) {
-        window.open('/eg2/staff/acq/picklist/' + row.id(), '_blank');
+        const url = this.ngLocation.prepareExternalUrl(
+            this.router.serializeUrl(
+                this.router.createUrlTree(['/staff/acq/picklist/', row.id()])
+            )
+        );
+
+        window.open(url);
     }
 
     doSearch(search: AcqSearch) {

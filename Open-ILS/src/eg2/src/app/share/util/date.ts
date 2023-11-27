@@ -72,6 +72,7 @@ export class DateUtil {
             ((now.getMonth() + 1) + '').padStart(2, '0') + '-' +
             (now.getDate() + '').padStart(2, '0');
     }
+<<<<<<< HEAD
 
     static localYmdPartsFromDate(date?: Date): YmdParts {
         const ymd = DateUtil.localYmdFromDate(date);
@@ -82,5 +83,7 @@ export class DateUtil {
             day: Number(parts[2])
         };
     }
+=======
+>>>>>>> c2f08224ad (JBAS-2916 KCLS 3.9 Megasquash)
 }
 

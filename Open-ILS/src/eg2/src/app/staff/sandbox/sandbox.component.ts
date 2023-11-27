@@ -32,6 +32,8 @@ import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
 })
 export class SandboxComponent implements OnInit {
 
+    nativeDate = '2021-10-06';
+
     @ViewChild('progressDialog', { static: true })
     private progressDialog: ProgressDialogComponent;
 

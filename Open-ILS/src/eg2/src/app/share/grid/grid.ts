@@ -32,6 +32,7 @@ export class GridColumn {
     timezoneContextOrg: number;
     cellTemplate: TemplateRef<any>;
     dateOnlyIntervalField: string;
+    dateFormat: string;
 
     cellContext: any;
     isIndex: boolean;
@@ -99,6 +100,7 @@ export class GridColumn {
         col.datePlusTime = this.datePlusTime;
         col.ternaryBool = this.ternaryBool;
         col.timezoneContextOrg = this.timezoneContextOrg;
+        col.dateOnlyIntervalField = this.dateOnlyIntervalField;
         col.idlClass = this.idlClass;
         col.isAuto = this.isAuto;
 
@@ -383,6 +385,12 @@ export class GridColumnSet {
         return this.columns.filter(c => c.visible);
     }
 
+    requiredColumns(): GridColumn[] {
+        const visible = this.displayColumns();
+        return visible.concat(
+            this.columns.filter(c => c.required && !c.visible));
+    }
+
     // Sorted visible columns followed by sorted non-visible columns.
     // Note we don't sort this.columns directly as it would impact
     // grid column display ordering.
@@ -665,6 +673,7 @@ export class GridContext {
     disablePaging: boolean;
     showDeclaredFieldsOnly: boolean;
     cellTextGenerator: GridCellTextGenerator;
+    disableTooltips: boolean;
     reloadOnColumnChange: boolean;
 
     // Allow calling code to know when the select-all-rows-in-page
@@ -705,7 +714,7 @@ export class GridContext {
         this.columnSet.defaultHiddenFields = this.defaultHiddenFields;
         this.columnSet.defaultVisibleFields = this.defaultVisibleFields;
         if (!this.pager.limit) {
-            this.pager.limit = this.disablePaging ? MAX_ALL_ROW_COUNT : 10;
+            this.pager.limit = this.disablePaging ? MAX_ALL_ROW_COUNT : 50;
         }
         this.generateColumns();
     }
@@ -728,7 +737,7 @@ export class GridContext {
             if (conf) {
                 columns = conf.columns;
                 if (conf.limit && !this.disablePaging) {
-                    this.pager.limit = conf.limit;
+                    this.pager.limit = Number(conf.limit);
                 }
                 this.applyToolbarActionVisibility(conf.hideToolbarActions);
             }
@@ -771,6 +780,13 @@ export class GridContext {
             this.dataSource.reset();
             this.dataSource.requestPage(this.pager);
         });
+    }
+
+    // Reload without the setTimeout
+    reloadSync(): Promise<any> {
+        this.pager.reset();
+        this.dataSource.reset();
+        return this.dataSource.requestPage(this.pager);
     }
 
     reloadWithoutPagerReset() {
@@ -846,12 +862,29 @@ export class GridContext {
             for (let idx = 0; idx < sortDefs.length; idx++) {
                 const sortDef = sortDefs[idx];
 
-                const valueA = this.getRowColumnValue(rowA, sortDef.col);
-                const valueB = this.getRowColumnValue(rowB, sortDef.col);
+                let valueA;
+                let valueB;
+
+                if (sortDef.col.datatype === 'timestamp' || sortDef.col.datatype === 'money') {
+                    // Dates and currency may be formatted for display
+                    // in a way that does not sort as expected.  Sort on
+                    // unformatted ISO string.
+                    valueA = this.getRowColumnBareValue(rowA, sortDef.col);
+                    valueB = this.getRowColumnBareValue(rowB, sortDef.col);
+                } else {
+                    valueA = this.getRowColumnValue(rowA, sortDef.col);
+                    valueB = this.getRowColumnValue(rowB, sortDef.col);
+                }
 
                 if (valueA === '' && valueB === '') { continue; }
                 if (valueA === '' && valueB !== '') { return 1; }
                 if (valueA !== '' && valueB === '') { return -1; }
+
+                // getRowColumnBareValue() can return nulls and undefined's
+                if (valueA === null && valueB !== null) { return 1; }
+                if (valueA !== null && valueB === null) { return -1; }
+                if (valueA === undefined && valueB !== undefined) { return 1; }
+                if (valueA !== undefined && valueB === undefined) { return -1; }
 
                 const diff = sortDef.col.comparator(valueA, valueB);
                 if (diff === 0) { continue; }
@@ -954,6 +987,7 @@ export class GridContext {
             idlField: col.idlFieldDef ? col.idlFieldDef.name : col.name,
             datatype: col.datatype,
             datePlusTime: Boolean(col.datePlusTime),
+            dateFormat: col.dateFormat,
             timezoneContextOrg: Number(col.timezoneContextOrg),
             dateOnlyInterval: interval
         });
@@ -1327,6 +1361,11 @@ export class GridContext {
         });
     }
 
+    resetColumns(): Promise<any> {
+        this.columnSet.reset();
+        return this.store.removeItem('eg.grid.' + this.persistKey);
+    }
+
     saveGridConfig(): Promise<any> {
         if (!this.persistKey) {
             throw new Error('Grid persistKey required to save columns');
@@ -1384,6 +1423,7 @@ export class GridToolbarButton {
 export class GridToolbarCheckbox {
     label: string;
     isChecked: boolean;
+    disabled: boolean;
     onChange: EventEmitter<boolean>;
 }
 

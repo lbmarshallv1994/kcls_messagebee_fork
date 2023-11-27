@@ -20,6 +20,7 @@ import {BatchItemAttrComponent, BatchChangeSelection
     } from '@eg/staff/share/holdings/batch-item-attr.component';
 import {FileExportService} from '@eg/share/util/file-export.service';
 import {ToastService} from '@eg/share/toast/toast.service';
+import {BroadcastService} from '@eg/share/util/broadcast.service';
 
 @Component({
   selector: 'eg-copy-attrs',
@@ -95,6 +96,7 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
         private auth: AuthService,
         private format: FormatService,
         private store: StoreService,
+        private broadcaster: BroadcastService,
         private fileExport: FileExportService,
         private toast: ToastService,
         public  volcopy: VolCopyService
@@ -120,6 +122,33 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
         this.fineLevelLabelMap[2] = this.fineLevelNormal.text;
         this.fineLevelLabelMap[3] = this.fineLevelHigh.text;
 
+        // KCLS JBAS-2607
+        // Prepopulate the copy alert message batch attr values with
+        // the existing copy alerts since most alert updates are
+        // appends instead of replacements.
+        const noDupes: any = {};
+        this.context.copyList().forEach(copy => {
+            if (copy.alert_message()) {
+                noDupes[copy.alert_message()] = true;
+            }
+        });
+
+        // Iterate copies instead of noDupes to retain order.
+        this.context.copyList().forEach(copy => {
+            const msg = copy.alert_message();
+            if (!msg) { return; }
+
+            if (!this.values.alert_message) {
+
+                this.values.alert_message = msg;
+
+            } else if (msg in noDupes) {
+
+                this.values.alert_message += '\n' + msg;
+            }
+
+            delete noDupes[msg];
+        });
     }
 
     statCats(): IdlObject[] {
@@ -201,8 +230,9 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
                 return this.volcopy.copyStatuses[value].name();
 
             case 'location':
-                return value.name() +
-                    ' (' + this.org.get(value.owning_lib()).shortname() + ')';
+                return value.name();
+                    // ' (' + this.org.get(value.owning_lib()).shortname() + ')';
+                    // KCLS only show the location name
 
             case 'edit_date':
             case 'create_date':
@@ -243,7 +273,9 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
             case 'circ_modifier':
                 const mod = this.volcopy.commonData.acp_circ_modifier.filter(
                     m => m.code() === value)[0];
-                return mod ? mod.name() : '';
+
+                // KCLS show circ mod code and name
+                return mod ? `${mod.code()} : ${mod.name()}` : '';
 
             case 'mint_condition':
                 if (!this.mintConditionYes) { return ''; }
@@ -285,6 +317,14 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
                     return;
                 }
 
+                // Put a hard-stop on modifying magic copy statuses.
+                // We can get here by applying a copy template.
+                if (field === 'status' && (
+                    this.volcopy.copyStatIsMagic(copy.status()) ||
+                    this.volcopy.copyStatIsMagic(value))) {
+                    return;
+                }
+
                 copy[field](value);
                 copy.ischanged(true);
             });
@@ -308,7 +348,11 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
 
             // Change the copy circ lib to match the new owning lib
             // if configured to do so.
-            if (this.volcopy.defaults.values.circ_lib_mod_with_owning_lib) {
+            // KCLS wants to enforce this.  Since the setting is stored
+            // within the copy defaults config blob (and not a standalone
+            // setting), simplest to force it in the code.
+            // if (this.volcopy.defaults.values.circ_lib_mod_with_owning_lib) {
+            if (true) {
                 if (copy.circ_lib() !== orgId) {
                     copy.circ_lib(orgId);
                     copy.ischanged(true);
@@ -418,7 +462,7 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
     }
 
     openCopyAlerts() {
-        this.copyAlertsDialog.inPlaceCreateMode = true;
+        this.copyAlertsDialog.inPlaceMode = true;
         this.copyAlertsDialog.copyIds = this.context.copyList().map(c => c.id());
 
         this.copyAlertsDialog.open({size: 'lg'}).subscribe(changes => {
@@ -460,7 +504,7 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
     }
 
     openCopyTags() {
-        this.copyTagsDialog.inPlaceCreateMode = true;
+        this.copyTagsDialog.inPlaceMode = true;
         this.copyTagsDialog.copyIds = this.context.copyList().map(c => c.id());
 
         this.copyTagsDialog.open({size: 'lg'}).subscribe(changes => {
@@ -501,36 +545,17 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
     }
 
     openCopyNotes() {
-        this.copyNotesDialog.inPlaceCreateMode = true;
-        this.copyNotesDialog.copyIds = this.context.copyList().map(c => c.id());
+        const copy = this.context.copyList()[0];
+        this.copyNotesDialog.copyId = copy.id();
 
-        this.copyNotesDialog.open({size: 'lg'}).subscribe(changes => {
-            if (!changes) { return; }
-
-            if ((!changes.newNotes || changes.newNotes.length === 0) &&
-                (!changes.delNotes || changes.delNotes.length === 0)
-               ) {
-                return;
-            }
-
-            changes.newNotes.forEach(note => {
-                this.context.copyList().forEach(copy => {
-                    const n = this.idl.clone(note);
-                    n.owning_copy(copy.id());
-                    copy.notes().push(n);
-                    copy.ischanged(true);
-                });
-            });
-            if (this.context.copyList().length === 1) {
-                const copy = this.context.copyList()[0];
-                changes.delNotes.forEach(note => {
-                    const existing = copy.notes().filter(n => n.id() === note.id())[0];
-                    if (existing) {
-                        existing.isdeleted(true);
-                        copy.ischanged(true);
-                    }
+        this.copyNotesDialog.open({size: 'lg'}).subscribe(notes => {
+            if (notes && notes.length !== copy.notes().length) {
+                this.broadcaster.broadcast('eg.holdings.update', {
+                    copies: [copy.id()],
+                    records: [copy.call_number().record()]
                 });
             }
+            copy.notes(notes);
         });
     }
 
@@ -543,7 +568,7 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
         const template = this.volcopy.templates[entry.id];
 
         Object.keys(template).forEach(field => {
-            const value = template[field];
+            let value = template[field];
 
             if (value === null || value === undefined) { return; }
             if (field === 'status' && this.volcopy.copyStatIsMagic(value)) { return; }
@@ -600,6 +625,12 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
                 });
 
                 return;
+            }
+
+            if (field === 'circ_modifier') {
+                // KCLS circ modifiers have numeric codes, which sometimes
+                // come across as numbers.  We want strings;
+                value = '' + value;
             }
 
             // In some cases, we may have to fetch the data since
@@ -693,13 +724,9 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
         reader.addEventListener('load', () => {
 
             try {
-                const template = JSON.parse(reader.result as string);
-                var theKeys = Object.keys(template);
-                for(let i = 0; i < theKeys.length; i++){
-                    var name = theKeys[i];
-                    this.volcopy.templates[name]=template[name];
-                };
-                        } catch (E) {
+                const templates = JSON.parse(reader.result as string);
+                Object.assign(this.volcopy.templates, templates);
+            } catch (E) {
                 console.error('Invalid Item Attribute template', E);
                 return;
             }
@@ -771,16 +798,9 @@ export class CopyAttrsComponent implements OnInit, AfterViewInit {
         this.batchAttrs.filter(attr => attr.editing).forEach(attr => attr.save());
     }
 
-    copyLocationOrgs(): number[] {
+    affectedOrgIds(): number[] {
         if (!this.context) { return []; }
-
-        // Make sure every org unit represented by the edit batch
-        // is represented.
-        const ids = this.context.orgNodes().map(n => n.target.id());
-
-        // Make sure all locations within the "full path" of our
-        // workstation org unit are included.
-        return ids.concat(this.org.fullPath(this.auth.user().ws_ou()));
+        return this.context.orgNodes().map(n => n.target.id());
     }
 }
 

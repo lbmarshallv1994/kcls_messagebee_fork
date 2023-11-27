@@ -123,7 +123,18 @@ export class PatronService {
     }
 
     getById(id: number, pcrudOps?: any): Promise<IdlObject> {
-        return this.pcrud.retrieve('au', id, pcrudOps).toPromise();
+        return this.pcrud.retrieve('au', id, pcrudOps).toPromise()
+        .then(p => {
+
+            // Grabbing the user via pcrud creates an opportunity for
+            // "replaced" addresses (with negative IDs) to be retrieved.
+            // Remove them.
+            if (Array.isArray(p.addresses())) {
+                p.addresses(p.addresses().filter(a => Number(a.id()) > 0));
+            }
+
+            return p;
+        });
     }
 
 
@@ -140,7 +151,9 @@ export class PatronService {
     // preferred name value where available.
     namePart(patron: IdlObject, part: string): string {
         if (!patron) { return ''; }
-        return patron['pref_' + part]() || patron[part]();
+        //return patron['pref_' + part]() || patron[part]();
+        // Move to  using the base name as the preferred name.
+        return patron[part]();
     }
 
 
@@ -358,6 +371,11 @@ export class PatronService {
             return 'PATRON_BARRED';
         }
 
+        if (summary.alerts.accountExpired ||
+            summary.alerts.accountExpiresSoon) {
+            return 'PATRON_EXPIRED';
+        }
+
         if (patron.active() === 'f') {
             return 'PATRON_INACTIVE';
         }
@@ -370,13 +388,11 @@ export class PatronService {
             return 'PATRON_HAS_OVERDUES';
         }
 
-        if (summary.alerts.accountExpired || summary.alerts.accountExpiresSoon) {
-          return 'PATRON_EXPIRED';
-        }
-
+        /* // we have no CSS rule for this one.  Skip it.
         if (patron.notes().length > 0) {
             return 'PATRON_HAS_NOTES';
         }
+        */
 
         if (summary.stats.checkouts.lost > 0) {
             return 'PATRON_HAS_LOST';
@@ -415,10 +431,6 @@ export class PatronService {
             return 'ONE_PENALTY';
         } else if (penaltyCount > 1) {
             return 'MULTIPLE_PENALTIES';
-        }
-
-        if (patron.alert_message()) {
-            return 'PATRON_HAS_ALERT';
         }
 
         if (patron.juvenile() === 't') {

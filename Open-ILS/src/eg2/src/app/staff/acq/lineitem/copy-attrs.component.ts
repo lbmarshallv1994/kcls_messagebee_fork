@@ -4,32 +4,50 @@ import {Pager} from '@eg/share/util/pager';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
-import {OrgService} from '@eg/core/org.service';
 import {LineitemService, COPY_ORDER_DISPOSITION} from './lineitem.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {ItemLocationService} from '@eg/share/item-location-select/item-location-select.service';
 import {ItemLocationSelectComponent} from '@eg/share/item-location-select/item-location-select.component';
+import {OrgSelectManualComponent} from '@eg/share/org-select-manual/org-select-manual.component';
 
 @Component({
   templateUrl: 'copy-attrs.component.html',
-  styleUrls: ['copy-attrs.component.css'],
   selector: 'eg-lineitem-copy-attrs'
 })
 export class LineitemCopyAttrsComponent implements OnInit {
 
     @Input() lineitem: IdlObject;
-    @Input() rowIndex: number;
+    // The batch variation will not have a row index, but we
+    // want a value so its use in the domId will be defined.
+    @Input() rowIndex = -1;
     @Input() batchAdd = false;
     @Input() gatherParamsOnly = false;
 
-    @Output() becameDirty = new EventEmitter<Boolean>();
+    @Input() resetOnSubmit = false;
+
+    @Input() hideCollectionCode = false;
+    @Input() hideCallNumber = false;
+
+    callNumberEntries: ComboboxEntry[] = [];
+    _callNumberOptions = [];
+    @Input() set callNumberOptions(list: string[]) {
+        if (list) {
+            this._callNumberOptions = list;
+            this.callNumberEntries = list.map(v => ({id: v, label: v}));
+        } else {
+            this._callNumberOptions = [];
+            this.callNumberEntries = [];
+        }
+    }
+
+    get callNumberOptions(): string[] {
+        return this._callNumberOptions;
+    }
+
     @Output() templateCopy = new EventEmitter<IdlObject>();
 
     fundEntries: ComboboxEntry[];
-    _fundBalanceCache: string[] = [];
-    _inflight: Promise<string>[] = [];
     circModEntries: ComboboxEntry[];
-    owners: number[];
 
     private _copy: IdlObject;
     @Input() set copy(c: IdlObject) { // acqlid
@@ -57,8 +75,6 @@ export class LineitemCopyAttrsComponent implements OnInit {
     // Always read-only.
     @Input() embedded = false;
 
-    @Input() showReceiver = false;
-
     // Emits an 'acqlid' object;
     @Output() batchApplyRequested: EventEmitter<IdlObject> = new EventEmitter<IdlObject>();
     @Output() deleteRequested: EventEmitter<IdlObject> = new EventEmitter<IdlObject>();
@@ -69,19 +85,18 @@ export class LineitemCopyAttrsComponent implements OnInit {
     @ViewChild('locationSelector') locationSelector: ItemLocationSelectComponent;
     @ViewChild('circModSelector') circModSelector: ComboboxComponent;
     @ViewChild('fundSelector') fundSelector: ComboboxComponent;
+    @ViewChild('callNumberSelector') callNumberSelector: ComboboxComponent;
+    @ViewChild('owningLibSelect') owningLibSelector: OrgSelectManualComponent;
 
     constructor(
         private idl: IdlService,
         private net: NetService,
         private auth: AuthService,
-        private org: OrgService,
         private loc: ItemLocationService,
         private liService: LineitemService
     ) {}
 
     ngOnInit() {
-
-        this.owners = this.org.ancestors(this.auth.user().ws_ou(), true);
 
         if (this.gatherParamsOnly) {
             this.batchMode = false;
@@ -91,7 +106,8 @@ export class LineitemCopyAttrsComponent implements OnInit {
         if (this.batchMode || this.gatherParamsOnly) { // stub batch copy
             this.copy = this.idl.create('acqlid');
             this.copy.isnew(true);
-            this.templateCopy.emit(this.copy);
+			this.templateCopy.emit(this.copy);
+
         } else {
 
             // When a batch selector value changes, duplicate the selected
@@ -111,21 +127,11 @@ export class LineitemCopyAttrsComponent implements OnInit {
         }
     }
 
-    valueChange(field: string, entry: ComboboxEntry) {
+    valueChange(field: string, entry: any) {
+        console.log('Changing attr ' + field + ' to ', entry);
 
         const announce: any = {};
         this.copy.ischanged(true);
-        if (!this.batchMode) {
-            if (field !== 'owning_lib') {
-                this.becameDirty.emit(true);
-            } else {
-                // FIXME eg-org-select current send needless change
-                //       events, so we need to check
-                if (entry && this.copy[field]() !== entry.id()) {
-                    this.becameDirty.emit(true);
-                }
-            }
-        }
 
         switch (field) {
 
@@ -158,67 +164,19 @@ export class LineitemCopyAttrsComponent implements OnInit {
         }
     }
 
-    // copied from combobox to get the label right for funds
-    getOrgShortname(ou: any) {
-        if (typeof ou === 'object') {
-            return ou.shortname();
-        } else {
-            return this.org.get(ou).shortname();
-        }
-    }
-
     // Tell our inputs about the values we know we need
     // Values will be pre-cached in the liService
-    //
-    // TODO: figure out a better way to do this so that we
-    //       don't need to duplicate the code to format
-    //       the display labels for funds correctly
     setInitialOptions(copy: IdlObject) {
 
         if (copy.fund()) {
             const fund = this.liService.fundCache[copy.fund()];
-            this.fundEntries = [{
-                id: fund.id(),
-                label: fund.code() + ' (' + fund.year() + ')' +
-                       ' (' + this.getOrgShortname(fund.org()) + ')',
-                 fm: fund
-            }];
+            this.fundEntries = [{id: fund.id(), label: fund.code(), fm: fund}];
         }
 
         if (copy.circ_modifier()) {
             const mod = this.liService.circModCache[copy.circ_modifier()];
             this.circModEntries = [{id: mod.code(), label: mod.name(), fm: mod}];
         }
-    }
-
-    checkFundBalance(fundId: number): string {
-        if (this.liService.fundCache[fundId] && this.liService.fundCache[fundId]._balance) {
-            return this.liService.fundCache[fundId]._balance;
-        }
-        if (this._fundBalanceCache[fundId]) {
-            return this._fundBalanceCache[fundId];
-        }
-        if (this._inflight[fundId]) {
-            return 'ok';
-        }
-        this._inflight[fundId] = this.net.request(
-            'open-ils.acq',
-            'open-ils.acq.fund.check_balance_percentages',
-            this.auth.token(), fundId
-        ).toPromise().then(r => {
-            if (r[0]) {
-                this._fundBalanceCache[fundId] = 'stop';
-            } else if (r[1]) {
-                this._fundBalanceCache[fundId] = 'warning';
-            } else {
-                this._fundBalanceCache[fundId] = 'ok';
-            }
-            if (this.liService.fundCache[fundId]) {
-                this.liService.fundCache[fundId]['_balance'] = this._fundBalanceCache[fundId];
-            }
-            delete this._inflight[fundId];
-            return this._fundBalanceCache[fundId];
-        });
     }
 
     fieldIsDisabled(field: string) {
@@ -236,6 +194,31 @@ export class LineitemCopyAttrsComponent implements OnInit {
 
     disposition(): COPY_ORDER_DISPOSITION {
         return this.liService.copyDisposition(this.lineitem, this.copy);
+    }
+
+    focusNext(field: string, rowIndex: number) {
+        let node = document.getElementById(`${field}-${rowIndex + 1}`);
+        if (!node) {
+            // Loop back around to the top.
+            node = document.getElementById(`${field}-1`);
+        }
+        if (node) { node.focus(); }
+    }
+
+    batchUpateClick() {
+        this.batchApplyRequested.emit(this.copy);
+        if (this.resetOnSubmit) {
+            this.copy = this.idl.create('acqlid');
+            if (this.locationSelector) {
+                this.locationSelector.clear();
+            }
+            if (this.owningLibSelector) {
+                this.owningLibSelector.clear();
+            }
+            if (this.callNumberSelector) {
+                this.callNumberSelector.selected = null;
+            }
+        }
     }
 }
 

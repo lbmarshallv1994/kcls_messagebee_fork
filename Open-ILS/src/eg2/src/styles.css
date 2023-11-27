@@ -176,6 +176,11 @@ a:hover {
   font-size: 22px;
 }
 
+.mat-icon-shrunk-in-button {
+    line-height: inherit;
+    font-size: 18px;
+}
+
 /* allow spans/labels to vertically orient with material icons */
 .label-with-material-icon {
     display: inline-flex;
@@ -197,13 +202,21 @@ a:hover {
   padding: .5rem;
 }
 
+/* roughly the same size as a btn-sm */
+.tight-pagination .page-link {
+  padding: .40rem .7rem;
+}
+
 @media all and (min-width: 800px) {
-    /* scrollable typeahead menus for full-size screens */
     ngb-typeahead-window {
         height: auto;
-        max-height: 200px;
+        max-height: 440px;
         overflow-x: hidden;
     }
+}
+
+ngb-typeahead-window .dropdown-item {
+    font-size: 14px;
 }
 
 /* Limit size of dropdown menus and allow for scrolling */
@@ -228,13 +241,17 @@ a:hover {
  * TODO: these colors don't fit the EG color scheme
  * Required valid fields are left-border styled in green-ish.
  * Invalid fields are left-border styled in red-ish.
+ *
+ * re: .valid-input / .invalid-input : sometimes you just need a 
+ * simple way to force it.
  */
-.form-validated .ng-valid[required]:not(eg-combobox):not(eg-date-select), 
-.form-validated .ng-valid.required, input[formcontrolname].ng-valid.required {
+.form-validated .ng-valid[required]:not(eg-combobox):not(eg-date-select):not(eg-date-select-native), 
+.form-validated .ng-valid.required, input[formcontrolname].ng-valid.required,
+.valid-input {
   border-left: 5px solid #78FA89;
 }
-.form-validated .ng-invalid:not(form):not(eg-combobox):not(eg-date-select),
-input[formcontrolname].ng-invalid {
+.form-validated .ng-invalid:not(form):not(eg-combobox):not(eg-date-select):not(eg-date-select-native),
+input[formcontrolname].ng-invalid, .invalid-input {
   border-left: 5px solid #FA787E;
 }
 

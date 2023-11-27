@@ -1,5 +1,6 @@
 import {Component, OnInit, TemplateRef, ElementRef, Renderer2} from '@angular/core';
-import {PrintService, PrintRequest} from './print.service';
+import {PrintService, PrintRequest, HATCH_FILE_WRITER_PRINTER,
+    HATCH_BROWSER_PRINTING_PRINTER} from './print.service';
 import {StoreService} from '@eg/core/store.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {HatchService, HatchMessage} from '@eg/core/hatch.service';
@@ -71,6 +72,12 @@ export class PrintComponent implements OnInit {
     // Resolves to true if a) Hatch is usable and b) the requested print
     // context is not using the 'native brower printing' printer.
     checkHatchEnabledForRequest(printReq: PrintRequest): Promise<boolean> {
+
+        if (printReq.printerName === HATCH_BROWSER_PRINTING_PRINTER) {
+            // Caller specifically requested browser native printing.
+            return Promise.resolve(false);
+        }
+
         return this.checkHatchEnabled().then(enabled => {
             if (!enabled) { return false; }
 
@@ -119,6 +126,10 @@ export class PrintComponent implements OnInit {
                     this.dispatchPrint(printReq).then(__ => {
                         this.reset();
                         this.printer.printJobQueued$.emit(printReq);
+                        this.strings.interpolate(
+                            'eg.print.job_queued',
+                            {name: printReq.templateName}
+                        ).then(msg => this.toast.info(msg));
                     });
                 });
             });
@@ -232,7 +243,7 @@ export class PrintComponent implements OnInit {
 
         return this.checkHatchEnabledForRequest(printReq).then(enabled => {
             if (enabled) {
-                this.printViaHatch(printReq);
+                return this.printViaHatch(printReq);
             } else {
                 // Here the needed HTML is already in the page.
                 window.print();
@@ -240,7 +251,7 @@ export class PrintComponent implements OnInit {
         });
     }
 
-    printViaHatch(printReq: PrintRequest) {
+    printViaHatch(printReq: PrintRequest): Promise<any> {
         if (!printReq.contentType) {
             printReq.contentType = 'text/html';
         }
@@ -251,7 +262,8 @@ export class PrintComponent implements OnInit {
             html = `<html><body>${printReq.text}</body></html>`;
         }
 
-        this.serverStore.getItem(`eg.print.config.${printReq.printContext}`)
+        return this.serverStore.getItem(
+            `eg.print.config.${printReq.printContext}`)
         .then(config => {
 
             let msg: HatchMessage;
@@ -279,7 +291,7 @@ export class PrintComponent implements OnInit {
                 });
             }
 
-            this.hatch.sendRequest(msg).then(
+            return this.hatch.sendRequest(msg).then(
                 ok  => console.debug('Print request succeeded'),
                 err => console.warn('Print request failed', err)
             );

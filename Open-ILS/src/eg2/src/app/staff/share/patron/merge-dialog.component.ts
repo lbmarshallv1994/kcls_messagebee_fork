@@ -18,6 +18,7 @@ const PATRON_FLESH_FIELDS = [
     'cards',
     'settings',
     'standing_penalties',
+    'stat_cat_entries',
     'addresses',
     'billing_address',
     'mailing_address',

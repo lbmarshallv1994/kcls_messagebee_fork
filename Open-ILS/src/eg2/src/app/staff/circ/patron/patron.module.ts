@@ -34,6 +34,10 @@ import {PatronPermsComponent} from './perms.component';
 import {BillingHistoryComponent} from './billing-history.component';
 import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
 import {LastPatronComponent} from './last.component';
+import {TriggeredEventsModule
+  } from '@eg/staff/share/triggered-events/triggered-events.module';
+import {PendingPatronsComponent} from './pending.component';
+import {CircSearchComponent} from './circ-search.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +48,7 @@ import {LastPatronComponent} from './last.component';
     EditComponent,
     EditToolbarComponent,
     BcSearchComponent,
+    CircSearchComponent,
     ItemsComponent,
     BillsComponent,
     BillStatementComponent,
@@ -56,6 +61,7 @@ import {LastPatronComponent} from './last.component';
     PatronStatCatsComponent,
     PatronPermsComponent,
     LastPatronComponent,
+    PendingPatronsComponent,
     PatronBarcodesDialogComponent,
     SecondaryGroupsDialogComponent,
     HoldNotifyUpdateDialogComponent
@@ -71,6 +77,7 @@ import {LastPatronComponent} from './last.component';
     PatronModule,
     PatronRoutingModule,
     BarcodesModule,
+    TriggeredEventsModule,
     WorkLogModule
   ],
   providers: [

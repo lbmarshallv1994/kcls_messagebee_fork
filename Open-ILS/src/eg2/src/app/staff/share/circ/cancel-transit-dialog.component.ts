@@ -1,6 +1,6 @@
 import {Component, OnInit, Output, Input, ViewChild, EventEmitter} from '@angular/core';
 import {empty, of, from, Observable} from 'rxjs';
-import {concatMap, tap} from 'rxjs/operators';
+import {concatMap, map, tap} from 'rxjs/operators';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
@@ -30,6 +30,7 @@ export class CancelTransitDialogComponent extends DialogComponent implements OnI
 
     @ViewChild('success') success: StringComponent;
     @ViewChild('failure') failure: StringComponent;
+    @ViewChild('alertDialog') alertDialog: AlertDialogComponent;
 
     constructor(
         private modal: NgbModal,
@@ -49,27 +50,36 @@ export class CancelTransitDialogComponent extends DialogComponent implements OnI
 
         let changesMade = false;
         let error = false;
+        let lastError = null;
 
         from(this.transitIds).pipe(concatMap(id => {
             return this.net.request(
                 'open-ils.circ',
                 'open-ils.circ.transit.abort',
                 this.auth.token(), {transitid: id}
-            ).pipe(tap(resp => {
+            ).pipe(map(resp => {
                 const evt = this.evt.parse(resp);
                 if (evt) {
                     error = true;
                     this.toast.danger(this.failure.text);
                     console.error(evt);
+                    lastError = evt.toString();
                 } else {
                     changesMade = true;
+                    return resp;
                 }
             }));
         })).subscribe(null, null, () => {
-            if (changesMade && !error) {
-                this.toast.success(this.success.text);
+            if (error) {
+                this.alertDialog.dialogBody = lastError;
+                this.alertDialog.open().toPromise()
+                    .then(_ => this.close(changesMade));
+            } else {
+                if (changesMade) {
+                    this.toast.success(this.success.text);
+                }
+                this.close(changesMade);
             }
-            this.close(changesMade);
         });
     }
 }
