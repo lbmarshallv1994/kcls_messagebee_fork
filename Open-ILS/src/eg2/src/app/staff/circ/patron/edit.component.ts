@@ -26,6 +26,7 @@ import {HoldNotifyUpdateDialogComponent} from './hold-notify-update.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {WorkLogService} from '@eg/staff/share/worklog/worklog.service';
+import {StaffService} from '@eg/staff/share/staff.service';
 
 const PATRON_FLESH_FIELDS = [
     'cards',
@@ -239,6 +240,7 @@ export class EditComponent implements OnInit {
         private patronService: PatronService,
         private printer: PrintService,
         private worklog: WorkLogService,
+        private staff: StaffService,
         public context: PatronContextService
     ) {}
 
@@ -1598,6 +1600,15 @@ export class EditComponent implements OnInit {
     }
 
     save(clone?: boolean): Promise<any> {
+
+        // TODO prefix these with $localize when we can.
+        const dibs = prompt('Staff Initials');
+        if (!dibs) {
+            alert('Staff initials are required to save');
+            return;
+        }
+
+        this.patron.dibs(this.staff.appendInitials('', dibs));
 
         this.changesPending = false;
         this.loading = true;
