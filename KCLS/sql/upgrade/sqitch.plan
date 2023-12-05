@@ -1,0 +1,6 @@
+%syntax-version=1.0.0
+%project=kcls-evergreen
+%uri=http://kcls.org/evergreen-schema
+
+0000-kcls-base-schema-3.9 2023-12-05T10:43:32Z berick <berick@kcls> # Base 3.9 Schema
+
