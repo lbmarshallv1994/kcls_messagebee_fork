@@ -183,6 +183,7 @@ export class RouteDialogComponent extends DialogComponent {
             }
         })
         .then(_ => this.noAutoPrint[this.slip]);
+        */
     }
 
     print(): Promise<any> {

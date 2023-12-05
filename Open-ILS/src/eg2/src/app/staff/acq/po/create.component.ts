@@ -87,13 +87,13 @@ export class PoCreateComponent implements OnInit {
         } else {
             this.initDone = true;
         }
+    }
 
     ngAfterViewInit() {
         const node = document.getElementById('provider-input');
         if (node) { node.focus(); }
     }
 
-    }
 
     orgChange(org: IdlObject) {
         this.orderAgency = org ? org.id() : null;

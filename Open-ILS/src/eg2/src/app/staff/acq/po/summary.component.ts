@@ -15,15 +15,10 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {PoService} from './po.service';
 import {LineitemService} from '../lineitem/lineitem.service';
 import {CancelDialogComponent} from '../lineitem/cancel-dialog.component';
-import {LinkInvoiceDialogComponent} from '../lineitem/link-invoice-dialog.component';
 
-const PO_ACTIVATION_WARNINGS = [
-    'ACQ_FUND_EXCEEDS_WARN_PERCENT'
-];
 
 @Component({
   templateUrl: 'summary.component.html',
-  styleUrls: [ './summary.component.css' ],
   selector: 'eg-acq-po-summary'
 })
 export class PoSummaryComponent implements OnInit, OnDestroy {
@@ -38,10 +33,6 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
 
     newPoName: string;
     editPoName = false;
-    dupeResults = {
-        dupeFound: false,
-        dupePoId: -1
-    };
     initDone = false;
     ediMessageCount = 0;
     invoiceCount = 0;
@@ -49,21 +40,15 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
     zeroCopyActivate = false;
     canActivate: boolean = null;
     canFinalize = false;
-    showLegacyLinks = false;
-    doingActivation = false;
-    finishPoActivation = false;
 
     activationBlocks: EgEvent[] = [];
-    activationWarnings: EgEvent[] = [];
     activationEvent: EgEvent;
     nameEditEnterToggled = false;
     stateChangeSub: Subscription;
 
     @ViewChild('cancelDialog') cancelDialog: CancelDialogComponent;
-    @ViewChild('linkInvoiceDialog') linkInvoiceDialog: LinkInvoiceDialogComponent;
     @ViewChild('progressDialog') progressDialog: ProgressDialogComponent;
     @ViewChild('confirmFinalize') confirmFinalize: ConfirmDialogComponent;
-    @ViewChild('confirmActivate') confirmActivate: ConfirmDialogComponent;
 
     constructor(
         private router: Router,
@@ -98,18 +83,10 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
         return this.poService.currentPo;
     }
 
-    load(useCache: boolean = true): Promise<any> {
+    load(): Promise<any> {
         if (!this.poId) { return Promise.resolve(); }
 
-        this.dupeResults.dupeFound = false;
-        this.dupeResults.dupePoId = -1;
-
-        if (history.state.finishPoActivation) {
-            this.doingActivation = true;
-            useCache = false;
-        }
-
-        return this.poService.getFleshedPo(this.poId, {fromCache: useCache, toCache: true})
+        return this.poService.getFleshedPo(this.poId, {fromCache: true, toCache: true})
         .then(po => {
 
             // EDI message count
@@ -129,22 +106,13 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
 
         })
         .then(_ => this.setCanActivate())
-        .then(_ => this.setCanFinalize())
-        .then(_ => this.loadUiPrefs())
-        .then(_ => this.activatePoIfRequested());
+        .then(_ => this.setCanFinalize());
     }
 
     // Can run via Enter or blur.  If it just ran via Enter, avoid
     // running it again on the blur, which will happen directly after
     // the Enter.
     toggleNameEdit(fromEnter?: boolean) {
-
-        // don't allow change if new name is currently
-        // a duplicate
-        if (this.dupeResults.dupeFound) {
-            return;
-        }
-
         if (fromEnter) {
             this.nameEditEnterToggled = true;
         } else {
@@ -164,13 +132,11 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
                 if (node) { node.select(); }
             });
 
-        } else if (this.newPoName && this.newPoName !== this.po().name() &&
-                   !this.dupeResults.dupeFound) {
+        } else if (this.newPoName && this.newPoName !== this.po().name()) {
 
             const prevName = this.po().name();
             this.po().name(this.newPoName);
             this.newPoName = null;
-            this.dupeResults.dupeFound = false;
 
             this.pcrud.update(this.po()).subscribe(resp => {
                 const evt = this.evt.parse(resp);
@@ -182,12 +148,6 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
         }
     }
 
-    checkDuplicatePoName() {
-        this.poService.checkDuplicatePoName(
-            this.po().ordering_agency(), this.newPoName, this.dupeResults
-        );
-    }
-
     cancelPo() {
         this.cancelDialog.open().subscribe(reason => {
             if (!reason) { return; }
@@ -197,36 +157,16 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
             this.net.request('open-ils.acq',
                 'open-ils.acq.purchase_order.cancel',
                 this.auth.token(), this.poId, reason
-            ).subscribe(resp => {
+            ).subscribe(ok => {
                 this.progressDialog.close();
-
-                const evt = this.evt.parse(resp);
-                if (evt) {
-                    alert(evt);
-                } else {
-                    location.href = location.href;
-                }
+                location.href = location.href;
             });
         });
-    }
-
-    linkInvoiceFromPo() {
-
-        this.linkInvoiceDialog.poId = this.poId;
-        this.linkInvoiceDialog.open().subscribe(invId => {
-            if (!invId) { return; }
-
-            const path = '/eg/staff/acq/legacy/invoice/view/' + invId + '?' +
-                     'attach_po=' + this.poId;
-            window.location.href = path;
-        });
-
     }
 
     setCanActivate() {
         this.canActivate = null;
         this.activationBlocks = [];
-        this.activationWarnings = [];
 
         if (!(this.po().state().match(/new|pending/))) {
             this.canActivate = false;
@@ -237,20 +177,14 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
             zero_copy_activate: this.zeroCopyActivate
         };
 
-        return this.net.request('open-ils.acq',
+        this.net.request('open-ils.acq',
             'open-ils.acq.purchase_order.activate.dry_run',
             this.auth.token(), this.poId, null, options
 
         ).pipe(tap(resp => {
 
             const evt = this.evt.parse(resp);
-            if (evt) {
-                if (PO_ACTIVATION_WARNINGS.includes(evt.textcode)) {
-                    this.activationWarnings.push(evt);
-                } else {
-                    this.activationBlocks.push(evt);
-                }
-            }
+            if (evt) { this.activationBlocks.push(evt); }
 
         })).toPromise().then(_ => {
 
@@ -264,51 +198,6 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
     }
 
     activatePo(noAssets?: boolean) {
-        this.doingActivation = true;
-        if (this.activationWarnings.length) {
-            this.confirmActivate.open().subscribe(confirmed => {
-                if (!confirmed) {
-                    this.doingActivation = true;
-                    return;
-                }
-
-                this._activatePo(noAssets);
-            });
-        } else {
-            this._activatePo(noAssets);
-        }
-    }
-
-    _activatePo(noAssets?: boolean) {
-        if (noAssets) {
-            // Bypass any Vandelay choices and force-load all records.
-            const vandelay = {
-                import_no_match: true,
-                queue_name: `ACQ ${new Date().toISOString()}`
-            };
-
-            const options = {
-                zero_copy_activate: this.zeroCopyActivate,
-                no_assets: noAssets
-            };
-
-            this._doActualActivate(vandelay, options);
-        } else {
-            this.poService.checkIfImportNeeded().then(importNeeded => {
-                if (importNeeded) {
-                    this.router.navigate(
-                        ['/staff/acq/po/' + this.po().id() + '/create-assets'],
-                        { state: { activatePo: true } }
-                    );
-                } else {
-                    // LIs are linked to bibs, so charge forward and activate with no options set
-                    this._doActualActivate({}, {});
-                }
-            });
-        }
-   }
-
-    _doActualActivate(vandelay: any, options: any) {
         this.activationEvent = null;
         this.progressDialog.open();
         this.progressDialog.update({max: this.po().lineitem_count() * 3});
@@ -341,13 +230,7 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
             if (Number(resp) === 1) {
                 this.progressDialog.close();
                 // Refresh everything.
-                this.initDone = false;
-                this.doingActivation = false;
-                this.load(false).then(_ => {
-                    this.initDone = true;
-                    this.liService.clearLiCache();
-                    this.router.navigate([]);
-                });
+                location.href = location.href;
 
             } else {
                 this.progressDialog.update(
@@ -374,19 +257,6 @@ export class PoSummaryComponent implements OnInit, OnDestroy {
         this.pcrud.search('aiit',
             {code: invTypes, blanket: 't'}, {limit: 1})
         .subscribe(_ => this.canFinalize = true);
-    }
-
-    loadUiPrefs() {
-        return this.store.getItemBatch(['ui.staff.acq.show_deprecated_links'])
-        .then(settings => {
-            this.showLegacyLinks = settings['ui.staff.acq.show_deprecated_links'];
-        });
-    }
-
-    activatePoIfRequested() {
-        if (this.canActivate && history.state.finishPoActivation) {
-            this.activatePo(false);
-        }
     }
 
     finalizePo() {

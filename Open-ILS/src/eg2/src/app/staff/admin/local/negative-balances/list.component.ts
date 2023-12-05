@@ -3,7 +3,6 @@ import {Location} from '@angular/common';
 import {EMPTY} from 'rxjs';
 import {map, tap, concatMap} from 'rxjs/operators';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';

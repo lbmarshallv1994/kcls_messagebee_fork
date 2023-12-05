@@ -42,6 +42,9 @@ export class ReplaceBarcodeDialogComponent
 
     constructor(
         private modal: NgbModal, // required for passing to parent
+        private evt: EventService,
+        private auth: AuthService,
+        private net: NetService,
         private toast: ToastService,
         private pcrud: PcrudService) {
         super(modal); // required for subclassing

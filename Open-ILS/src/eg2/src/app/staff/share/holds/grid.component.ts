@@ -102,14 +102,6 @@ export class HoldsGridComponent implements OnInit {
     // Display bib record summary along the top of the detail page.
     @Input() showRecordSummary = false;
 
-    // If true, avoid popping up the progress dialog.  Note the grid
-    // has it's own generic embedded 'loading' progress indicator.
-    @Input() noLoadProgress = false;
-
-    // Some default columns and actions do or don't make sense when
-    // displaying holds for a specific patron vs. e.g. a specific title.
-    @Input() patronFocused = false;
-
     mode: 'list' | 'detail' | 'manage' = 'list';
     initDone = false;
     holdsCount: number;
@@ -1014,7 +1006,6 @@ export class HoldsGridComponent implements OnInit {
             case 'pl_changed': return this.postClearPlChanged.text;
         }
         return '';
->>>>>>> c2f08224ad (JBAS-2916 KCLS 3.9 Megasquash)
     }
 }
 

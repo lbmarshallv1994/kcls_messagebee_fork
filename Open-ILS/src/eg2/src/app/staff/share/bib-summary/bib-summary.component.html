@@ -40,12 +40,12 @@
         title="Show More" i18n-title
         *ngIf="!expand" (click)="expand=true">
         <span class="material-icons" aria-hidden="true">expand_more</span>
-      </button>
-      <button class="with-material-icon btn btn-link" type="button"
-        title="Show Less" i18n-title aria-label="Show Less" i18n-aria-label
-        *ngIf="expand" (click)="expand=false">
-        <span class="material-icons" aria-hidden="true">expand_less</span>
-      </button>
+      </a>
+      <a class="with-material-icon no-href text-primary"                       
+        title="Show Less" i18n-title                                           
+        *ngIf="expand" (click)="expand=false">                                 
+        <span class="material-icons" aria-hidden="true">expand_less</span>                        
+      </a>  
     </div>
   </div>
   <div class="row">

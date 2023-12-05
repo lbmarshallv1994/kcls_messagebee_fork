@@ -27,7 +27,6 @@ import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
       CopyAlertsDialogComponent,
       CopyTagsDialogComponent,
       CopyNotesDialogComponent,
-      CopyNotesEditComponent,
       ReplaceBarcodeDialogComponent,
       DeleteHoldingDialogComponent,
       ConjoinedItemsDialogComponent,

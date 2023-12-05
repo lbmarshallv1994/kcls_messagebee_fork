@@ -94,7 +94,6 @@ export class BillingHistoryComponent implements OnInit {
 
             const query: any = {
                usr: this.patronId,
-               xact_start: {between: [this.xactsStart, this.xactsEnd]},
                xact_start: {between:
                     [this.xactsStart, this.getNextDate(this.xactsEnd)]
                 },

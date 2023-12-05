@@ -161,16 +161,5 @@ export class HoldingsService {
 
         return copy;
     }
-
-    getCopyStatuses(): Promise<{[id: number]: IdlObject}> {
-        if (this.copyStatuses) {
-            return Promise.resolve(this.copyStatuses);
-        }
-
-        this.copyStatuses = {};
-        return this.pcrud.retrieveAll('ccs', {order_by: {ccs: 'name'}})
-        .pipe(tap(stat => this.copyStatuses[stat.id()] = stat))
-        .toPromise().then(_ => this.copyStatuses);
-    }
 }
 

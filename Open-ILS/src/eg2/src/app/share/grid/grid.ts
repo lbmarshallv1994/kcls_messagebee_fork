@@ -404,12 +404,6 @@ export class GridColumnSet {
         return visible.concat(invisible);
     }
 
-    requiredColumns(): GridColumn[] {
-        const visible = this.displayColumns();
-        return visible.concat(
-            this.columns.filter(c => c.required && !c.visible));
-    }
-
     insertBefore(source: GridColumn, target: GridColumn) {
         let targetIdx = -1;
         let sourceIdx = -1;

@@ -1,5 +1,4 @@
 import {Injectable, EventEmitter, NgZone} from '@angular/core';
-import {Injectable, EventEmitter} from '@angular/core';
 import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';

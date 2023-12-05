@@ -8,9 +8,6 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {StringService} from '@eg/share/string/string.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
 
-const HATCH_FILE_WRITER_PRINTER = 'hatch_file_writer';
-const HATCH_BROWSER_PRINTING_PRINTER = 'hatch_browser_printing';
-
 @Component({
     selector: 'eg-print',
     templateUrl: './print.component.html'
