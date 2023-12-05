@@ -15,7 +15,6 @@
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "baseHref": "/eg2/",
-            "deployUrl": "/eg2/",
             "outputPath": "../../web/eg2/",
             "index": "src/index.html",
             "main": "src/main.ts",
