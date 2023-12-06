@@ -28090,21 +28090,6 @@ CREATE FUNCTION public.crosstab4(text) RETURNS SETOF public.tablefunc_crosstab_4
 
 ALTER FUNCTION public.crosstab4(text) OWNER TO postgres;
 
---
--- Name: do_copy(text, text, text); Type: FUNCTION; Schema: public; Owner: evergreen
---
-
-CREATE FUNCTION public.do_copy(tbname text, fname text, fpath text) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-    BEGIN
-        EXECUTE 'COPY ' || tbname || ' FROM ''' || fpath || '/' || fname || '''';
-        RETURN;
-    END;
-$$;
-
-
-ALTER FUNCTION public.do_copy(tbname text, fname text, fpath text) OWNER TO evergreen;
 
 --
 -- Name: entityize(text); Type: FUNCTION; Schema: public; Owner: evergreen
