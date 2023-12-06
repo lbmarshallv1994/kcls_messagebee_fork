@@ -213,7 +213,7 @@ export class PcrudContext {
     }
 
     private dispatch(method: string, params: any[]): Observable<PcrudResponse> {
-        if (this.authoritative) {
+        if (false && this.authoritative) {
             return this.wrapXact(() => {
                 return this.sendRequest(method, params);
             });
