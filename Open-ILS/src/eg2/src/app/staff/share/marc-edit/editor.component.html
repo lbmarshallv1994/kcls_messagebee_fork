@@ -75,28 +75,28 @@
 </div>
 
 <!-- cataloging date selector -->
-<div class="row d-flex p-2 m-2" *ngIf="record && record.id">
-  <div class="flex-1"></div>
+<div class="row row-cols-lg-auto p-2 m-2" *ngIf="record && record.id">
+  <div class="col-12 ms-auto">
+    <div class="font-italic pe-2" *ngIf="saveCount > 0" i18n>
+      Record saved {{saveCount}} time(s).
+    </div>
+  </div>
 
-  <span class="font-italic pr-2" *ngIf="saveCount > 0" i18n>
-    Record saved {{saveCount}} time(s).
-  </span>
-
-  <div class="mr-2">
+  <div class="col-12">
     <div class="input-group">
-      <div class="input-group-prepend">
-        <span class="input-group-text" i18n>Cataloging Date</span>
-      </div>
+      <span class="input-group-text" i18n>Cataloging Date</span>
       <eg-date-select #catDateSelect [(ngModel)]="catDate">
       </eg-date-select>
     </div>
   </div>
 
-  <button class="btn btn-outline-dark mr-2" [disabled]="catDate == origCatDate" 
-    (click)="setCatDate();" i18n>Apply Date</button>
+  <div class="col-12">
+    <button class="btn btn-outline-dark me-2" [disabled]="catDate == origCatDate" 
+      (click)="setCatDate();" i18n>Apply Date</button>
 
-  <button class="btn btn-outline-dark" [disabled]="!origCatDate" 
-    (click)="catDateSelect.reset(); setCatDate(true)" i18n>Clear Date</button>
+    <button class="btn btn-outline-dark" [disabled]="!origCatDate" 
+      (click)="catDateSelect.reset(); setCatDate(true)" i18n>Clear Date</button>
+  </div>
 </div>
 
 <ng-container *ngIf="dataSaving">
@@ -132,9 +132,10 @@
   </div>
 </div>
 
-<div class="row d-flex p-2 m-2 flex-row-reverse">
-  <button class="btn btn-success" (click)="saveRecord()"
-    [disabled]="!record || record.deleted || record.id == -1" i18n>Save Changes</button>
+<div class="row row-cols-lg-auto p-2 m-2">
+  <div class="col-12 ms-auto">
+    <button class="btn btn-success" (click)="saveRecord()"
+      [disabled]="!record || record.deleted || record.id == -1" i18n>Save Changes</button>
+  </div>
 </div>
-
 

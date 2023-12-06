@@ -2,7 +2,8 @@
   <div class="collapse navbar-collapse">
     <div class="navbar-nav">
       <div class="nav-item">
-        <a i18n class="nav-link with-material-icon" 
+        <a i18n 
+          class="nav-link with-material-icon nav-link-home"
           routerLink="/staff/splash"
           egAccessKey keyCtx="navbar" i18n-keySpec i18n-keyDesc
           keySpec="alt+h" keyDesc="Navigate Home">
@@ -459,7 +460,7 @@
     </div>
 
 
-    <div class="navbar-nav mr-auto"></div>
+    <div class="navbar-nav me-auto"></div>
 
     <div class="navbar-nav" *ngIf="hostname == 'evgtesting.kcls.org'">
       <span><b style="color:gold; font-size: 130%">TESTING SERVER</b></span>

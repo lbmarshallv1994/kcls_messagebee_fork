@@ -12,6 +12,8 @@
       </select>
       of the following terms:</label>
     </div>
+    <!-- Hiding for now because it's capturing (keyup.enter) even when
+          the search text input is focused.
     <div class="col">
       <button class="with-material-icon btn btn-link text-primary"
         title="Show Form" i18n-title
@@ -26,6 +28,7 @@
         <span class="material-icons" aria-hidden="true">expand_less</span>
       </button>
     </div>
+    -->
   </div>
   <div class="row row-cols-auto mb-1" *ngFor="let t of searchTerms; let idx=index" [hidden]="!showForm">
     <div class="col">

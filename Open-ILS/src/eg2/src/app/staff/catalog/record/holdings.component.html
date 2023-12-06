@@ -6,9 +6,7 @@
 <div class="row mt-2">
   <div class="col-lg-4">
     <div class="input-group">
-      <div class="input-group-text">
-        <div class="input-group-text form-control-sm" i18n>Holdings Maintenance</div>
-      </div>
+      <div class="input-group-text form-control-sm" i18n>Holdings Maintenance</div>
       <eg-org-select [initialOrg]="contextOrg" [smallFormControl]="true"
         (componentLoaded)="contextOrgChanged(null)"
         persistKey="catalog.holdings" (onChange)="contextOrgChanged($event)">
@@ -23,7 +21,7 @@
   <!-- ps-* is doubled for added impact -->
   <div class="ps-{{row.locationDepth}}">
     <span class="ps-{{row.locationDepth}}">
-      <button type="button" class="label-with-material-icon" (click)="userContext.toggleExpandRow(row)">
+      <a type="button" class="label-with-material-icon" (click)="userContext.toggleExpandRow(row)">
         <!--  leave the icons in place for all node types, but make them
               invisible when they are not needed. -->
         <span *ngIf="row.treeNode.expanded"
@@ -33,7 +31,7 @@
           [ngClass]="{invisible: row.copy || row.treeNode.children.length === 0}"
           class="material-icons p-0 m-0" aria-hidden="true">keyboard_arrow_right</span>
         <span>{{row.locationLabel}}</span>
-      </button>
+      </a>
     </span>
   </div>
 </ng-template>
