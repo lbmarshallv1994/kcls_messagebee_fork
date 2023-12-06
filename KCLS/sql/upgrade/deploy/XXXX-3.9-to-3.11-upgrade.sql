@@ -376,7 +376,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- SELECT evergreen.upgrade_deps_block_check('1350', :eg_version);
-CREATE FUNCTION asset.merge_record_assets(target_record bigint, source_record bigint) RETURNS integer
+CREATE OR REPLACE FUNCTION asset.merge_record_assets(target_record bigint, source_record bigint) RETURNS integer
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -2118,8 +2118,6 @@ BEGIN
 END;
 $F$ LANGUAGE PLPGSQL;
 
-COMMIT;
-
 -- Find the "broadest" value in use, and update the defaults for all classes
 DO $do$
 DECLARE
@@ -3665,7 +3663,8 @@ BEGIN
 END;
 $function$;
 
-CREATE TRIGGER acpl_validate_edit BEFORE UPDATE ON asset.copy_location FOR EACH ROW EXECUTE FUNCTION asset.copy_location_validate_edit();
+CREATE TRIGGER acpl_validate_edit BEFORE UPDATE ON asset.copy_location 
+    FOR EACH ROW EXECUTE PROCEDURE asset.copy_location_validate_edit();
 
 -- SELECT evergreen.upgrade_deps_block_check('1391', :eg_version);
 
