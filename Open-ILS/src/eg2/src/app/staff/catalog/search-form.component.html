@@ -20,7 +20,7 @@
   <div *ngIf="canBeHidden()" class="row pt-1 pe-2">
     <div class="col-lg-12 d-flex">
       <div class="flex-1"></div><!-- push right -->
-      <button (click)="toggleFormDisplay()" class="btn btn-link label-with-material-icon">
+      <button (click)="toggleFormDisplay()" class="btn btn-link label-with-material-icon text-decoration-none">
         <ng-container *ngIf="hideForm()">
           <span i18n>Show Search Form</span> 
           <span class="material-icons" aria-hidden="true">unfold_more</span>
@@ -345,19 +345,28 @@
         <a i18n ngbNavLink role="tab">MARC Search</a>
         <ng-template ngbNavContent>
           <div class="mt-1">
-              <div class="row mt-2 gx-3 row-cols-auto" 
-                *ngFor="let q of context.marcSearch.values; let idx = index; trackBy:trackByIdx">
-                <label for="marc-tag-{{idx}}" i18n>Tag</label>
-                <input class="form-control ms-2" size="3" type="text" 
-                  name="marc-tag-{{idx}}" id="{{ idx == 0 ? 'first-marc-tag' : '' }}"
-                  [(ngModel)]="context.marcSearch.tags[idx]"
-                  (keyup.enter)="searchByForm()"/>
-                <label for="marc-subfield-{{idx}}" class="ms-2" i18n>Subfield</label>
-                <input class="form-control ms-2" size="1" type="text" 
-                  name="marc-subfield-{{idx}}"
-                  [(ngModel)]="context.marcSearch.subfields[idx]"
-                  (keyup.enter)="searchByForm()"/>
-                <select class="form-select ms-2" 
+            <div class="row mt-2 gx-3 row-cols-auto" 
+              *ngFor="let q of context.marcSearch.values; let idx = index; trackBy:trackByIdx">
+              <div class="col">
+                <div class="input-group">
+                  <label class="input-group-text" for="marc-tag-{{idx}}" i18n>Tag</label>
+                  <input class="form-control" size="3" type="text" 
+                    name="marc-tag-{{idx}}" id="{{ idx == 0 ? 'first-marc-tag' : '' }}"
+                    [(ngModel)]="context.marcSearch.tags[idx]"
+                    (keyup.enter)="searchByForm()"/>
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group">
+                  <label class="input-group-text" for="marc-subfield-{{idx}}" i18n>Subfield</label>
+                  <input class="form-control" size="1" type="text" 
+                    name="marc-subfield-{{idx}}"
+                    [(ngModel)]="context.marcSearch.subfields[idx]"
+                    (keyup.enter)="searchByForm()"/>
+                </div>
+              </div>
+              <div class="col">
+                <select class="form-select" 
                   [(ngModel)]="context.marcSearch.matchOp[idx]">
                   <option i18n value='contains'>Contains</option>
                   <option i18n value='nocontains'>Does not contain</option>
@@ -367,24 +376,34 @@
                   <option i18n value='starts'>Starts with</option>
                   <option i18n value='regexp'>Regex Match</option>
                 </select>
-                <label for="marc-value-{{idx}}" class="ms-2" i18n>Value</label>
-                <input class="form-control ms-2" type="text" name="marc-value-{{idx}}"
-                  [(ngModel)]="context.marcSearch.values[idx]" 
-                  (keyup.enter)="searchByForm()"/>
-                <button class="btn btn-sm material-icon-button ms-2"
+              </div>
+              <div class="col">
+                <div class="input-group">
+                  <label class="input-group-text" for="marc-value-{{idx}}" i18n>Value</label>
+                  <input class="form-control" type="text" name="marc-value-{{idx}}"
+                    size="12"
+                    [(ngModel)]="context.marcSearch.values[idx]" 
+                    (keyup.enter)="searchByForm()"/>
+                </div>
+              </div>
+              <div class="col ps-0 pe-0">
+                <button class="btn btn-sm material-icon-button"
                   (click)="addMarcSearchRow(idx + 1)">
                   <span class="material-icons">add_circle_outline</span>
                 </button>
-                <button class="btn btn-sm material-icon-button ms-2"
+              </div>
+              <div class="col ps-0 pe-0">
+                <button class="btn btn-sm material-icon-button"
                   [disabled]="context.marcSearch.values.length < 2"
                   (click)="delMarcSearchRow(idx)">
                   <span class="material-icons">remove_circle_outline</span>
                 </button>
               </div>
+            </div>
           </div>
           <div class="row mt-4">
-            <div class="col-lg-12">
-              <div class="form-inline mt-2">
+            <div class="col-lg-4">
+              <div class="mt-2">
                 <select class="form-select me-2" [(ngModel)]="context.sort">
                   <option value='' i18n>Sort by Relevance</option>
                   <optgroup label="Sort by Title" i18n-label>
