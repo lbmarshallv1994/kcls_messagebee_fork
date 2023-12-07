@@ -1,5 +1,13 @@
+<style>
+  .facet-selected {
+    background-color: #DDD;
+  }
+  .card {
+    width: 100%;
+  }
+  .list-group-item {padding: .5rem .75rem .5rem .75rem}
+</style>
 <div *ngIf="searchContext.result.facetData">
-  <h2 class="visually-hidden" i18n>Facets</h2>
   <div *ngFor="let facetConf of facetConfig.display">
     <div *ngIf="searchContext.result.facetData[facetConf.facetClass]">
       <div *ngFor="let name of facetConf.facetOrder">
@@ -21,7 +29,7 @@
                 [ngClass]="{'facet-selected' :
                   facetIsApplied(facetConf.facetClass, name, value.value)}"
                 *ngFor="
-                  let value of searchContext.result.facetData[facetConf.facetClass][name].valueList">
+                  let value of searchContext.result.facetData[facetConf.facetClass][name].valueList | slice:0:facetConfig.displayCount">
                 <div class="row">
                   <div class="col-lg-9">
                     <a class="card-link"
@@ -30,7 +38,7 @@
                       {{value.value}}
                     </a>
                   </div>
-                  <div class="col-lg-3 text-end">{{value.count}}</div>
+                  <div class="col-lg-3">{{value.count}}</div>
                 </div>
               </li>
             </ul>

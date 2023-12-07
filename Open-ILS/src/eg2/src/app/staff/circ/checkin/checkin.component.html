@@ -23,67 +23,66 @@
     <div class="alert alert-danger p-1 text-dark">
 
       <span *ngIf="backdate" 
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">history</span>
-        <span class="pl-2" i18n>Backdated Check In {{backdate | date:'shortDate'}}</span>
+        <span class="ps-2" i18n>Backdated Check In {{backdate | date:'shortDate'}}</span>
       </span>
 
       <span *ngIf="backdate && backdateUntilLogout"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">timeline</span>
-        <span class="pl-2" i18n>Use Effective Date Until Logout</span>
+        <span class="ps-2" i18n>Use Effective Date Until Logout</span>
       </span>
 
       <span *ngIf="modifiers.no_precat_alert"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">edit</span>
-        <span class="pl-2" i18n>Ignore Pre-Cataloged Items</span>
+        <span class="ps-2" i18n>Ignore Pre-Cataloged Items</span>
       </span>
 
       <span *ngIf="modifiers.noop"
-        class="me-3 pr-3 border-right border-info label-with-material-icon"> 
+        class="me-3 pe-3 border-right border-info label-with-material-icon"> 
         <span class="material-icons">block</span>
-        <span class="pl-2" i18n>Suppress Holds and Transits</span>
+        <span class="ps-2" i18n>Suppress Holds and Transits</span>
       </span>
 
       <span *ngIf="modifiers.void_overdues"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">monetization_on</span>
-        <span class="pl-2" i18n>Amnesty Mode</span>
+        <span class="ps-2" i18n>Amnesty Mode</span>
       </span>
 
       <span *ngIf="modifiers.auto_print_holds_transits"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">print</span>
-        <span class="pl-2" i18n>Auto-Print Hold and Transit Slips</span>
+        <span class="ps-2" i18n>Auto-Print Hold and Transit Slips</span>
       </span>
 
-      <span class="me-3 pr-3 border-right border-info" 
+      <span class="me-3 pe-3 border-right border-info" 
         *ngIf="modifiers.clear_expired" i18n>Clear Holds Shelf</span>
 
-      <ng-container *ngIf="modifiers.retarget_holds">
-        <span class="me-3 pr-3 border-right border-info" 
-          *ngIf="modifiers.retarget_holds_all" i18n>Always Retarget Local Holds</span>
-        <span class="me-3 pr-3 border-right border-info" 
-          *ngIf="!modifiers.retarget_holds_all" i18n>Retarget Local Holds</span>
-      </ng-container>
+      <span *ngIf="modifiers.retarget_holds && !modifiers.retarget_holds_all"
+        class="me-3 pe-3 border-right border-info" i18n>Retarget Local Holds</span>
+
+      <span *ngIf="modifiers.retarget_holds_all"
+        class="me-3 pe-3 border-right border-info" i18n>Retarget All Local Holds</span>
 
       <span *ngIf="modifiers.hold_as_transit"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">directions_transit</span>
-        <span class="pl-2" i18n>Capture Local Holds As Transits</span>
+        <span class="ps-2" i18n>Capture Local Holds As Transits</span>
       </span>
 
       <span *ngIf="modifiers.auto_print_ill_receipt"
-        class="me-3 pr-3 border-right border-info label-with-material-icon">
+        class="me-3 pe-3 border-right border-info label-with-material-icon">
         <span class="material-icons">print</span>
-        <span class="pl-2" i18n>Auto-Print ILL Receipt</span>
+        <span class="ps-2" i18n>Auto-Print ILL Receipt</span>
       </span>
 
-      <span class="me-3 pr-3 border-right border-info" 
+      <span class="me-3 pe-3 border-right border-info" 
         *ngIf="modifiers.manual_float" i18n>Manual Floating Active</span>
 
-      <span class="me-3 pr-3 border-right border-info" 
+      <span class="me-3 pe-3 border-right border-info" 
         *ngIf="modifiers.do_inventory_update" i18n>Update Inventory</span>
     </div>
   </div>
@@ -346,7 +345,7 @@
             <span *ngIf="modifiers.void_overdues" 
               class="badge rounded-pill bg-success me-2">&#x2713;</span>
             <span *ngIf="!modifiers.void_overdues"
-              class="badge badge-warning me-2">&#x2717;</span>
+              class="badge rounded-pill bg-warning me-2">&#x2717;</span>
             <span i18n>Amnesty Mode</span>
           </a>
           <a ngbDropdownItem *ngIf="!isHoldCapture"
@@ -354,7 +353,7 @@
             <span *ngIf="modifiers.auto_print_holds_transits" 
               class="badge rounded-pill bg-success me-2">&#x2713;</span>
             <span *ngIf="!modifiers.auto_print_holds_transits"
-              class="badge badge-warning me-2">&#x2717;</span>
+              class="badge rounded-pill bg-warning me-2">&#x2717;</span>
             <span>Auto-Print Hold and Transit Slips</span>
           </a>
           <a ngbDropdownItem (click)="toggleMod('clear_expired')">
@@ -404,7 +403,7 @@
             <span *ngIf="modifiers.auto_print_ill_receipt"
               class="badge rounded-pill bg-success me-2">&#x2713;</span>
             <span *ngIf="!modifiers.auto_print_ill_receipt"
-              class="badge badge-warning me-2">&#x2717;</span>
+              class="badge rounded-pill bg-warning me-2">&#x2717;</span>
             <span i18n>Auto-Print ILL Receipt</span>
           </a>
         </div>

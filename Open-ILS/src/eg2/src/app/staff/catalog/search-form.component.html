@@ -43,7 +43,9 @@
             *ngFor="let q of context.termSearch.query; let idx = index; trackBy:trackByIdx">
             <div class="col-lg-2 pe-1">
               <div *ngIf="idx === 0">
+                <!--
                 <label i18n class="form-label select-label" for="context-termSearch-format">Format</label>
+                -->
                 <select class="form-select" id="context-termSearch-format" [(ngModel)]="context.termSearch.format">
                   <option i18n value=''>All Formats</option>
                   <option *ngFor="let fmt of ccvmMap.mattype"
@@ -51,7 +53,9 @@
                 </select>
               </div>
               <div *ngIf="idx > 0">
+                <!--
                 <label i18n class="form-label select-label" for="context-termSearch-joinOp-{{idx}}">Join with</label>
+                -->
                 <select class="form-select" id="context-termSearch-joinOp-{{idx}}"
                   [(ngModel)]="context.termSearch.joinOp[idx]">
                   <option i18n value='&&'>And</option>
@@ -60,7 +64,9 @@
               </div>
             </div>
             <div class="col-lg-2 ps-0 pe-2">
+              <!--
               <label i18n class="form-label select-label" for="context-termSearch-fieldClass-{{idx}}">Catalog Field</label>
+              -->
               <select class="form-select" id="context-termSearch-fieldClass-{{idx}}"
                 (change)="preventBogusCombos(idx)"
                 [(ngModel)]="context.termSearch.fieldClass[idx]">
@@ -79,7 +85,9 @@
               </select>
             </div>
             <div class="col-lg-2 ps-0 pe-2">
+              <!--
               <label i18n class="form-label select-label" for="context-termSearch-matchOp-{{idx}}">Matching</label>
+              -->
               <select class="form-select" id="context-termSearch-matchOp-{{idx}}"
                 [(ngModel)]="context.termSearch.matchOp[idx]">
                 <option i18n value='contains'>Contains</option>
@@ -96,7 +104,9 @@
             <div class="col-lg-4 ps-0 pe-2">
               <div class="form-group">
                 <div *ngIf="idx === 0">
+                  <!--
                   <label i18n class="form-label input-label" for='first-query-input'>Search Terms</label>
+                  -->
                   <input type="search" class="form-control"
                     id='first-query-input'
                     [(ngModel)]="context.termSearch.query[idx]"
@@ -104,7 +114,9 @@
                     placeholder="Query..." i18n-placeholder />
                 </div>
                 <div *ngIf="idx > 0">
+                  <!--
                   <label i18n class="form-label input-label" for='context-termSearch-query-{{idx}}'>Search Terms</label>
+                  -->
                   <input type="search" class="form-control"
                     [(ngModel)]="context.termSearch.query[idx]"
                     (keyup.enter)="searchByForm()"
@@ -163,12 +175,13 @@
               </div>
                 <div class="col checkbox ps-2 ms-2 pt-2">
                   <label class="form-label" for="context-termSearch-available">
-                    <input type="checkbox" [(ngModel)]="context.termSearch.available" id="context-termSearch-available" />
+                    <input type="checkbox" class="form-check-input" 
+                      [(ngModel)]="context.termSearch.available" id="context-termSearch-available" />
                     <span class="ps-1" i18n>Limit to Available</span>
                   </label>
                 </div>
                 <!-- KCLS
-                <div class="checkbox pl-3">
+                <div class="checkbox ps-3">
                   <label>
                     <input type="checkbox"
                       [(ngModel)]="context.termSearch.groupByMetarecord"/>
@@ -176,15 +189,15 @@
                   </label>
                 </div>
                 -->
-                <div class="checkbox pl-3">
+                <div class="checkbox ps-3">
                   <label>
-                    <input type="checkbox" [(ngModel)]="context.global"/>
-                    <span class="pl-1" i18n>Results from All Libraries</span>
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="context.global"/>
+                    <span class="ps-1" i18n>Results from All Libraries</span>
                   </label>
                 </div>
                 <div class="col checkbox ps-3 pt-2" *ngIf="showExcludeElectronic()">
                   <label class="form-label" for="context-termSearch-excludeElectronic">
-                    <input type="checkbox" id="context-termSearch-excludeElectronic"
+                    <input class="form-check-input" type="checkbox" id="context-termSearch-excludeElectronic"
                       [(ngModel)]="context.termSearch.excludeElectronic"/>
                     <span class="ps-1" i18n>Exclude Electronic Resources</span>
                   </label>
@@ -193,7 +206,7 @@
           </div>
           <div class="row mt-3" *ngIf="showFilters()">
             <div class="col-lg-3">
-              <select class="form-control"  multiple="true" size="5"
+              <select class="form-select"  multiple="true" size="5"
                 [(ngModel)]="context.termSearch.ccvmFilters.item_type">
                 <option value='' i18n>All Item Types</option>
                 <option *ngFor="let option of ccvmMap.item_type"
@@ -201,7 +214,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5"
+              <select class="form-select" multiple="true" size="5"
                 [(ngModel)]="context.termSearch.ccvmFilters.item_form">
                 <option value='' i18n>All Item Forms</option>
                 <option *ngFor="let option of ccvmMap.item_form"
@@ -209,7 +222,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5"
+              <select class="form-select" multiple="true" size="5"
                 [(ngModel)]="context.termSearch.ccvmFilters.item_lang">
                 <option value='' i18n>All Languages</option>
                 <option *ngFor="let option of ccvmMap.item_lang"
@@ -217,7 +230,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5" 
+              <select class="form-select" multiple="true" size="5" 
                 [(ngModel)]="context.termSearch.ccvmFilters.audience">
                 <option value='' i18n>All Audiences</option>
                 <option *ngFor="let option of ccvmMap.audience"
@@ -228,7 +241,7 @@
           <div class="row mt-3" *ngIf="showFilters()">
             <div class="col-lg-3">
               <!--
-              <select class="form-control" 
+              <select class="form-select" 
                 [(ngModel)]="context.termSearch.ccvmFilters.vr_format" multiple="true">
                 <option value='' i18n>All Video Formats</option>
                 <ng-container
@@ -237,7 +250,7 @@
               </select>
               -->
               <!-- KCLS replace video recording format with mattype multiselec -->
-              <select class="form-control" multiple="true" size="5" 
+              <select class="form-select" multiple="true" size="5" 
                 [(ngModel)]="context.termSearch.ccvmFilters.mattype">
                 <option value='' i18n>All Material Types</option>
                 <option *ngFor="let mattype of ccvmMap.mattype"
@@ -245,7 +258,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5" 
+              <select class="form-select" multiple="true" size="5" 
                 [(ngModel)]="context.termSearch.ccvmFilters.bib_level">
                 <option value='' i18n>All Bib Levels</option>
                 <option *ngFor="let option of ccvmMap.bib_level"
@@ -253,7 +266,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5" 
+              <select class="form-select" multiple="true" size="5" 
                 [(ngModel)]="context.termSearch.ccvmFilters.lit_form">
                 <option value='' i18n>All Literary Forms</option>
                 <option *ngFor="let option of ccvmMap.lit_form"
@@ -261,7 +274,7 @@
               </select>
             </div>
             <div class="col-lg-3">
-              <select class="form-control" multiple="true" size="5" 
+              <select class="form-select" multiple="true" size="5" 
                 [(ngModel)]="context.termSearch.copyLocations">
                 <option value='' i18n>All Copy Locations</option>
                 <option *ngFor="let loc of copyLocations" value="{{loc.id()}}" i18n>
@@ -335,16 +348,16 @@
               <div class="row mt-2 gx-3 row-cols-auto" 
                 *ngFor="let q of context.marcSearch.values; let idx = index; trackBy:trackByIdx">
                 <label for="marc-tag-{{idx}}" i18n>Tag</label>
-                <input class="form-control ml-2" size="3" type="text" 
+                <input class="form-control ms-2" size="3" type="text" 
                   name="marc-tag-{{idx}}" id="{{ idx == 0 ? 'first-marc-tag' : '' }}"
                   [(ngModel)]="context.marcSearch.tags[idx]"
                   (keyup.enter)="searchByForm()"/>
-                <label for="marc-subfield-{{idx}}" class="ml-2" i18n>Subfield</label>
-                <input class="form-control ml-2" size="1" type="text" 
+                <label for="marc-subfield-{{idx}}" class="ms-2" i18n>Subfield</label>
+                <input class="form-control ms-2" size="1" type="text" 
                   name="marc-subfield-{{idx}}"
                   [(ngModel)]="context.marcSearch.subfields[idx]"
                   (keyup.enter)="searchByForm()"/>
-                <select class="form-control ml-2" 
+                <select class="form-select ms-2" 
                   [(ngModel)]="context.marcSearch.matchOp[idx]">
                   <option i18n value='contains'>Contains</option>
                   <option i18n value='nocontains'>Does not contain</option>
@@ -354,15 +367,15 @@
                   <option i18n value='starts'>Starts with</option>
                   <option i18n value='regexp'>Regex Match</option>
                 </select>
-                <label for="marc-value-{{idx}}" class="ml-2" i18n>Value</label>
-                <input class="form-control ml-2" type="text" name="marc-value-{{idx}}"
+                <label for="marc-value-{{idx}}" class="ms-2" i18n>Value</label>
+                <input class="form-control ms-2" type="text" name="marc-value-{{idx}}"
                   [(ngModel)]="context.marcSearch.values[idx]" 
                   (keyup.enter)="searchByForm()"/>
-                <button class="btn btn-sm material-icon-button ml-2"
+                <button class="btn btn-sm material-icon-button ms-2"
                   (click)="addMarcSearchRow(idx + 1)">
                   <span class="material-icons">add_circle_outline</span>
                 </button>
-                <button class="btn btn-sm material-icon-button ml-2"
+                <button class="btn btn-sm material-icon-button ms-2"
                   [disabled]="context.marcSearch.values.length < 2"
                   (click)="delMarcSearchRow(idx)">
                   <span class="material-icons">remove_circle_outline</span>
@@ -372,7 +385,7 @@
           <div class="row mt-4">
             <div class="col-lg-12">
               <div class="form-inline mt-2">
-                <select class="form-control mr-2" [(ngModel)]="context.sort">
+                <select class="form-select me-2" [(ngModel)]="context.sort">
                   <option value='' i18n>Sort by Relevance</option>
                   <optgroup label="Sort by Title" i18n-label>
                     <option value='titlesort' i18n>Title: A to Z</option>
@@ -414,8 +427,8 @@
                 [(ngModel)]="context.browseSearch.value"
                 (keyup.enter)="searchByForm()"
                 placeholder="Browse for..."/>
-              <label for="browse-mattype-select" class="ml-2"> in </label>
-              <select class="form-control ml-2" 
+              <label for="browse-mattype-select" class="ms-2"> in </label>
+              <select class="form-select ms-2" 
                 [(ngModel)]="context.browseSearch.format">
                 <option i18n value=''>All Formats</option>
                 <option *ngFor="let fmt of ccvmMap.mattype"

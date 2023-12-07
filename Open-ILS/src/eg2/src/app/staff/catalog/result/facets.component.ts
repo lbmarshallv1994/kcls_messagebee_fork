@@ -15,14 +15,12 @@ export const FACET_CONFIG = {
 
 @Component({
   selector: 'eg-catalog-result-facets',
-  templateUrl: 'facets.component.html',
-  styleUrls: ['./facets.component.css']
+  templateUrl: 'facets.component.html'
 })
 export class ResultFacetsComponent implements OnInit {
 
     searchContext: CatalogSearchContext;
     facetConfig: any;
-    displayFullFacets: string[] = [];
 
     constructor(
         private cat: CatalogService,

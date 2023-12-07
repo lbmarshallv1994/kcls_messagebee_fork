@@ -126,7 +126,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-3 p-0 pl-1 m-0 d-flex">
+      <div class="col-lg-3 p-0 ps-1 m-0 d-flex">
         <div class="flex-1">
           <table>
             <!-- i know, tables boo!, but this lets us fit quite a bit
@@ -134,26 +134,26 @@
             <tbody>
               <tr>
                 <td i18n>TCN: </td>
-                <td class="pl-1">{{summary.record.tcn_value()}}</td>
+                <td class="ps-1">{{summary.record.tcn_value()}}</td>
               </tr>
               <tr>
                 <td i18n>Holds: </td>
-                <td class="pl-1">{{summary.holdCount}}</td>
+                <td class="ps-1">{{summary.holdCount}}</td>
               </tr>
               <ng-container *ngFor="let copyCount of summary.holdingsSummary; let copyIdx = index">
                 <tr>
                   <td>{{orgName(copyCount.org_unit)}}: </td>
-                  <td class="pl-1" i18n>{{copyCount.count}} total items</td>
+                  <td class="ps-1" i18n>{{copyCount.count}} total items</td>
                 </tr>
                 <tr *ngIf="copyCount.org_unit == 1">
                   <td>{{orgName(copyCount.org_unit)}}: </td>
-                  <td class="pl-1" i18n
+                  <td class="ps-1" i18n
                     [ngClass]="{'alert-danger rounded': !copyCount.hopeful && copyCount.count > 0}">
                     {{copyCount.hopeful || 0}} viable items</td>
                 </tr>
                 <tr>
                   <td>{{orgName(copyCount.org_unit)}}: </td>
-                  <td class="pl-1" i18n>{{copyCount.available}} available items</td>
+                  <td class="ps-1" i18n>{{copyCount.available}} available items</td>
                 </tr>
               </ng-container>
             </tbody>
@@ -210,21 +210,21 @@
             </div>
           </div>
         </div>
-        <div class="row pt-2">
-          <div class="col-lg-12">
-            <div class="float-right">
-              <ng-container *ngIf="summary.record.deleted() == 't'">
-                <span class="text-danger" i18n>(Deleted)</span>
-              </ng-container>
-              <span>
-                <button (click)="placeHold()" [disabled]="!summary.isHoldable"
-                  [ngClass]="summary.isHoldable ? 'btn-success' : 'btn-secondary'"
-                  class="btn btn-sm label-with-material-icon small-text-1">
-                  <span class="material-icons" aria-hidden="true">check</span>
-                  <span i18n>Place Hold</span>
-                </button>
-              </span>
-            </div>
+        <div class="row row-cols-auto pt-2">
+          <div class="col ms-auto">
+            <ng-container *ngIf="summary.record.deleted() == 't'">
+              <span class="text-danger" i18n>(Deleted)</span>
+            </ng-container>
+          </div>
+          <div class="col">
+            <span>
+              <button (click)="placeHold()" [disabled]="!summary.isHoldable"
+                [ngClass]="summary.isHoldable ? 'btn-success' : 'btn-secondary'"
+                class="btn btn-sm label-with-material-icon small-text-1">
+                <span class="material-icons" aria-hidden="true">check</span>
+                <span i18n>Place Hold</span>
+              </button>
+            </span>
           </div>
         </div>
       </div><!-- col -->

@@ -213,7 +213,7 @@ export class LineitemListComponent implements OnInit {
             return this.loadIds()
                 .then(_ => this.loadPage())
                 .then(_ => this.loading = false)
-                .catch(_ => {}); // re-route while page is loading
+                //.catch(_ => {}); // re-route while page is loading
         }
 
         // We have not collected enough data to proceed.
