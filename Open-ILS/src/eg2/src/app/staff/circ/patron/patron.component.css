@@ -4,8 +4,9 @@
 }
 
 ::ng-deep .lost-row {
-  color: #FFF;
-  background-color: #800000 !important;
+  /*color: #FFF;*/
+  color: #000;
+  background-color: #f57600 !important;
 }
 
 ::ng-deep .longoverdue-row {
