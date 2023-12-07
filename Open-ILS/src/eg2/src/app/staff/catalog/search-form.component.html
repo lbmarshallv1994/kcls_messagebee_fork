@@ -427,7 +427,7 @@
       <li role="presentation" [ngbNavItem]="'browse'">
         <a i18n ngbNavLink role="tab">Browse</a>
         <ng-template ngbNavContent>
-          <div class="row gx-3 row-cols-auto">
+          <div class="row gx-3 row-cols-auto mt-3">
             <label class="form-label col-form-label" for="field-class" i18n>Browse for</label>
             <div class="col ps-0">
               <select class="form-select ms-0" name="field-class"
@@ -439,14 +439,21 @@
                 <option i18n value='identifier'>Bib Call Number</option>
               </select>
             </div>
-            <label class="form-label col-form-label" for="query"> starting with </label>
+            <div class="col ps-0">
+              <label class="form-label col-form-label align-middle" for="query"> starting with </label>
+            </div>
             <div class="col ps-0">
               <input type="text" class="form-control" 
+                size="12"
                 id='browse-term-input' name="query"
                 [(ngModel)]="context.browseSearch.value"
                 (keyup.enter)="searchByForm()"
                 placeholder="Browse for..."/>
-              <label for="browse-mattype-select" class="ms-2"> in </label>
+            </div>
+            <div class="col ps-0">
+              <label for="browse-mattype-select" class="align-middle"> in </label>
+            </div>
+            <div class="col ps-0">
               <select class="form-select ms-2" 
                 [(ngModel)]="context.browseSearch.format">
                 <option i18n value=''>All Formats</option>
