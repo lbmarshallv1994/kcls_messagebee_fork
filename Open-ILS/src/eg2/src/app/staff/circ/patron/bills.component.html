@@ -129,37 +129,6 @@
 
 <h3 i18n>Pay Bill</h3>
 
-<!--
-<div class="row bg-light border border-dark rounded pt-2 pb-2 mt-2 mb-4 payment-form">
-  <div class="col-lg-12 d-flex form-inline form-validated">
-    <div class="flex-1"></div>
-    <div class="ms-2"><label for="payment-type" i18n>Payment Type:</label></div>
-    <div class="ms-1">
-      <select [(ngModel)]="paymentType" class="form-control" id="payment-type">
-        <option value="cash_payment" i18n>Cash</option>
-        <option value="check_payment" i18n>Check</option>
-        <option *ngIf="registerIsActive()" value="credit_card_payment" i18n>Credit Card</option>
-        <option value="forgive_payment" i18n>Forgive</option>
-      </select>
-    </div>
-    <div class="ms-2"><label for="check-number" i18n>Check Number:</label></div>
-    <div class="ms-1">
-      <input type="text" class="form-control" [(ngModel)]="checkNumber"
-        id="check-number" [disabled]="paymentType !== 'check_payment'"/>
-    </div>
-    <div class="ms-2"><label for="pay-amount" i18n>Payment Received:</label></div>
-    <div class="ms-1">
-      <input type="number" class="form-control" [(ngModel)]="paymentAmount"
-        (ngModelChange)="updatePendingColumn()" id="pay-amount" [min]="0"/>
-    </div>
-    <div class="ms-2">
-      <button class="btn btn-outline-dark" (click)="applyPayment()"
-        [disabled]="disablePayment()" i18n>Apply Payment</button>
-    </div>
-  </div>
-</div>
--->
-
 <div class="row bg-light border border-dark rounded pt-2 
   pb-2 mt-2 mb-4 payment-form row-cols-lg-auto form-validated">
 
