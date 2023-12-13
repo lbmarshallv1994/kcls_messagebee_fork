@@ -20,7 +20,7 @@ import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
 export class ItemRequestComponent implements OnInit {
     gridDataSource: GridDataSource = new GridDataSource();
     showRouteToIll = true;
-    showRouteToPurchasing = true;
+    showRouteToAcq = true;
     cellTextGenerator: GridCellTextGenerator;
 
     @ViewChild('grid') private grid: GridComponent;
@@ -52,12 +52,12 @@ export class ItemRequestComponent implements OnInit {
             let base = {
                 complete_date: null,
                 cancel_date: null,
-                route_to: ['ill', 'purchasing']
+                route_to: ['ill', 'acq']
             }
 
             if (!this.showRouteToIll) {
-                base.route_to = ['purchasing'];
-            } else if (!this.showRouteToPurchasing) {
+                base.route_to = ['acq'];
+            } else if (!this.showRouteToAcq) {
                 base.route_to = ['ill'];
             }
 
@@ -90,8 +90,8 @@ export class ItemRequestComponent implements OnInit {
         this.grid.reload();
     }
 
-    toggleRouteToPurchasing(action: boolean) {
-        this.showRouteToPurchasing = action;
+    toggleRouteToAcq(action: boolean) {
+        this.showRouteToAcq = action;
         this.grid.reload();
     }
 

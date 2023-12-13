@@ -161,7 +161,7 @@ export class CreateRequestComponent implements OnInit {
     }
 
     setRouteTo(values: Hash) {
-        values.route_to = 'purchasing';
+        values.route_to = 'acq';
         const fmt = this.requests.selectedFormat || '';
 
         if (fmt === 'book') {
