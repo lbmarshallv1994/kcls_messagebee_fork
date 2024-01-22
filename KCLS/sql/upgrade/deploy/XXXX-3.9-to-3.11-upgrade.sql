@@ -4135,7 +4135,7 @@ VALUES
     (2,'usrname')
 ;
 
-SELECT SETVAL('config.openathens_uid_field_id_seq'::TEXT, 100);
+PERFORM SETVAL('config.openathens_uid_field_id_seq'::TEXT, 100);
 
 INSERT INTO config.openathens_name_field
     (id, name)
@@ -4145,7 +4145,7 @@ VALUES
     (3,'fullname')
 ;
 
-SELECT SETVAL('config.openathens_name_field_id_seq'::TEXT, 100);
+PERFORM SETVAL('config.openathens_name_field_id_seq'::TEXT, 100);
 
 INSERT INTO permission.perm_list ( id, code, description) VALUES 
   ( 639, 'ADMIN_OPENATHENS', oils_i18n_gettext(639,
