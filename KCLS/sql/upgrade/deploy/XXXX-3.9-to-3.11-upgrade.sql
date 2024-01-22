@@ -5,6 +5,41 @@ BEGIN;
 
 SELECT 'Starting', CLOCK_TIMESTAMP();
 
+-- SELECT evergreen.upgrade_deps_block_check('1329', :eg_version);
+
+CREATE TABLE config.openathens_uid_field (
+    id      SERIAL  PRIMARY KEY,
+    name    TEXT    NOT NULL
+);
+
+CREATE TABLE config.openathens_name_field (
+    id      SERIAL  PRIMARY KEY,
+    name    TEXT    NOT NULL
+);
+
+CREATE TABLE config.openathens_identity (
+    id                          SERIAL  PRIMARY KEY,
+    active                      BOOL    NOT NULL DEFAULT true,
+    org_unit                    INT     NOT NULL REFERENCES actor.org_unit (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    api_key                     TEXT    NOT NULL,
+    connection_id               TEXT    NOT NULL,
+    connection_uri              TEXT    NOT NULL,
+    auto_signon_enabled         BOOL    NOT NULL DEFAULT true,
+    auto_signout_enabled        BOOL    NOT NULL DEFAULT false,
+    unique_identifier           INT     NOT NULL REFERENCES config.openathens_uid_field (id) DEFAULT 1,
+    display_name                INT     NOT NULL REFERENCES config.openathens_name_field (id) DEFAULT 1,
+    release_prefix              BOOL    NOT NULL DEFAULT false,
+    release_first_given_name    BOOL    NOT NULL DEFAULT false,
+    release_second_given_name   BOOL    NOT NULL DEFAULT false,
+    release_family_name         BOOL    NOT NULL DEFAULT false,
+    release_suffix              BOOL    NOT NULL DEFAULT false,
+    release_email               BOOL    NOT NULL DEFAULT false,
+    release_home_ou             BOOL    NOT NULL DEFAULT false,
+    release_barcode             BOOL    NOT NULL DEFAULT false
+);
+
+
+
 -- SKIPPING 
 -- SELECT evergreen.upgrade_deps_block_check('1342', :eg_version);
 
@@ -4080,6 +4115,103 @@ PERFORM evergreen.upgrade_deps_block_check('1382', '3.11-upgrade');
 PERFORM evergreen.upgrade_deps_block_check('1388', '3.11-upgrade');
 PERFORM evergreen.upgrade_deps_block_check('1391', '3.11-upgrade');
 PERFORM evergreen.upgrade_deps_block_check('1398', '3.11-upgrade');
+
+PERFORM evergreen.upgrade_deps_block_check('1329', '3.11-upgrade');
+-- already have this one
+PERFORM evergreen.upgrade_deps_block_check('1330', '3.11-upgrade');
+-- don't need this one
+PERFORM evergreen.upgrade_deps_block_check('1331', '3.11-upgrade');
+PERFORM evergreen.upgrade_deps_block_check('1332', '3.11-upgrade');
+
+-- already have this one
+PERFORM evergreen.upgrade_deps_block_check('1333', '3.11-upgrade');
+PERFORM evergreen.upgrade_deps_block_check('1334', '3.11-upgrade');
+PERFORM evergreen.upgrade_deps_block_check('1336', '3.11-upgrade');
+
+INSERT INTO config.openathens_uid_field
+    (id, name)
+VALUES
+    (1,'id'),
+    (2,'usrname')
+;
+
+SELECT SETVAL('config.openathens_uid_field_id_seq'::TEXT, 100);
+
+INSERT INTO config.openathens_name_field
+    (id, name)
+VALUES
+    (1,'id'),
+    (2,'usrname'),
+    (3,'fullname')
+;
+
+SELECT SETVAL('config.openathens_name_field_id_seq'::TEXT, 100);
+
+INSERT INTO permission.perm_list ( id, code, description) VALUES 
+  ( 639, 'ADMIN_OPENATHENS', oils_i18n_gettext(639,
+     'Allow a user to administer OpenAthens authentication service', 'ppl', 'description'));
+
+INSERT into config.org_unit_setting_type
+( name, grp, label, description, datatype, fm_class ) VALUES
+
+( 'acq.default_owning_lib_for_auto_lids_strategy', 'acq',
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids_strategy',
+        'How to set default owning library for auto-created line item items',
+        'coust', 'label'),
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids_strategy',
+        'Stategy to use to set default owning library to set when line item items are auto-created because the provider''s default copy count has been set. Valid values are "workstation" to use the workstation library, "blank" to leave it blank, and "use_setting" to use the "Default owning library for auto-created line item items" setting. If not set, the workstation library will be used.',
+        'coust', 'description'),
+    'string', null)
+,( 'acq.default_owning_lib_for_auto_lids', 'acq',
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids',
+        'Default owning library for auto-created line item items',
+        'coust', 'label'),
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids',
+        'The default owning library to set when line item items are auto-created because the provider''s default copy count has been set. This applies if the "How to set default owning library for auto-created line item items" setting is set to "use_setting".',
+        'coust', 'description'),
+    'link', 'aou')
+;
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.acq.picklist.upload.templates','acq','object',
+    oils_i18n_gettext(
+        'eg.acq.picklist.upload.templates',
+        'Acq Picklist Uploader Templates',
+        'cwst','label'
+    )
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'acq.lineitem.sort_order', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.lineitem.sort_order',
+        'ACQ Lineitem List Sort Order',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.org_unit_setting_type (name, grp, datatype, label)
+VALUES (
+    'ui.staff.acq.show_deprecated_links', 'gui', 'bool',
+    oils_i18n_gettext(
+        'ui.staff.acq.show_deprecated_links',
+        'Display Links to Deprecated Acquisitions Interfaces',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label) 
+VALUES (
+    'eg.grid.admin.actor.org_unit_settings', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.actor.org_unit_settings',
+        'Grid Config: admin.actor.org_unit_settings',
+        'cwst', 'label'
+    )
+);
+
 
 
 -- SELECT evergreen.upgrade_deps_block_check('1351', :eg_version);
