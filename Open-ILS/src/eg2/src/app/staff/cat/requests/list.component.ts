@@ -133,7 +133,7 @@ export class ItemRequestComponent implements OnInit {
         this.requestDialog.open({size: 'lg'})
         .subscribe(changesMade => {
             if (changesMade) {
-                this.grid.reload();
+                this.grid.context.reloadSync();
             }
         });
     }

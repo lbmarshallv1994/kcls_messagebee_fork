@@ -1,15 +1,34 @@
 <ng-template #dialogContent>
   <div class="modal-header">
-    <h4 class="modal-title">
-      <span i18n>Item Request</span>
-    </h4>
+    <h4 class="modal-title"><span i18n>Item Request</span></h4>
     <button type="button" class="btn-close btn-close-white" 
       i18n-aria-label aria-label="Close" (click)="close(false)"> </button>
   </div>
   <div class="modal-body form-validated" *ngIf="request">
     <div class="row">
-      <div class="col-2" i18n>Patron</div>
-      <div class="col-10">{{request.usr().family_name()}}, {{request.usr().first_given_name()}}</div>
+      <div class="col-3" i18n>Patron</div>
+      <div class="col-9">
+        {{request.usr().family_name()}}, {{request.usr().first_given_name()}}
+        (<a *ngIf="request.usr().card()" target="_blank"
+            routerLink="/staff/circ/patron/{{request.usr().id()}}/checkout">
+            {{request.usr().card().barcode()}}</a>)
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Title</div>
+      <div class="col-9">{{request.title()}}</div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Author</div>
+      <div class="col-9">{{request.author()}}</div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Publication Year</div>
+      <div class="col-2">
+        <input class="form-control" type="number" min="1900"
+          (ngModelChange)="request.pubdate($event)"
+          [ngModel]="request.pubdate()"/>
+      </div>
     </div>
   </div>
   <div class="modal-footer">

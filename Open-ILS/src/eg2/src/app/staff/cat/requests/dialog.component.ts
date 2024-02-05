@@ -58,7 +58,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
     }
 
     save() {
-        this.close(true);
+        this.pcrud.update(this.request).toPromise().then(_ => this.close(true));
     }
 }
 

@@ -160,6 +160,8 @@ export class CreateRequestComponent implements OnInit {
         return true;
     }
 
+    // TODO move this to the API and provide a flag to skip
+    // the calculation for staff-applied values.
     setRouteTo(values: Hash) {
         values.route_to = 'acq';
         const fmt = this.requests.selectedFormat || '';
