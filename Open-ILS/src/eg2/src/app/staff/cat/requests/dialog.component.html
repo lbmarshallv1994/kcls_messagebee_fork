@@ -1,0 +1,20 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <span i18n>Item Request</span>
+    </h4>
+    <button type="button" class="btn-close btn-close-white" 
+      i18n-aria-label aria-label="Close" (click)="close(false)"> </button>
+  </div>
+  <div class="modal-body form-validated" *ngIf="request">
+    <div class="row">
+      <div class="col-2" i18n>Patron</div>
+      <div class="col-10">{{request.usr().family_name()}}, {{request.usr().first_given_name()}}</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-warning" 
+      (click)="close(false)" i18n>Cancel</button>
+    <button (click)="save()" class="btn btn-success me-2" i18n>Save</button>
+  </div>
+</ng-template>

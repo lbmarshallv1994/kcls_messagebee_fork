@@ -13,6 +13,7 @@ import {GridDataSource, GridColumn, GridCellTextGenerator,
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
+import {ItemRequestDialogComponent} from './dialog.component';
 
 @Component({
   templateUrl: 'list.component.html'
@@ -25,6 +26,7 @@ export class ItemRequestComponent implements OnInit {
 
     @ViewChild('grid') private grid: GridComponent;
     @ViewChild('vendorPrompt') private vendorPrompt: PromptDialogComponent;
+    @ViewChild('requestDialog') private requestDialog: ItemRequestDialogComponent;
 
     constructor(
         private router: Router,
@@ -127,6 +129,13 @@ export class ItemRequestComponent implements OnInit {
 
     // may not need this.
     showRequestDialog(req: IdlObject) {
+        this.requestDialog.requestId = req.id();
+        this.requestDialog.open({size: 'lg'})
+        .subscribe(changesMade => {
+            if (changesMade) {
+                this.grid.reload();
+            }
+        });
     }
 
 

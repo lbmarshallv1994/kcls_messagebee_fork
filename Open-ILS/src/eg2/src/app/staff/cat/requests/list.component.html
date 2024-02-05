@@ -2,6 +2,8 @@
 <eg-prompt-dialog #vendorPrompt dialogTitle="Enter a Vendor" i18n-dialogTitle>
 </eg-prompt-dialog>
 
+<eg-item-request-dialog #requestDialog></eg-item-request-dialog>
+
 <ng-template #patronBarcodeTemplate let-row="row">
   <ng-container *ngIf="row.usr().card()">
     <a target="_blank" routerLink="/staff/circ/patron/{{row.usr().id()}}">
