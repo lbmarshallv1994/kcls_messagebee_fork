@@ -10,6 +10,7 @@ import {switchMap} from 'rxjs/operators';
 import {Observable, from, throwError} from 'rxjs';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
+import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
   selector: 'eg-item-request-dialog',
@@ -20,6 +21,14 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
     requestId: number | null = null;
     request: IdlObject = null;
+
+    languages = [
+        $localize`English`,
+        $localize`Spanish`,
+        $localize`French`,
+    ];
+
+    languageEntries: ComboboxEntry[] = [];
 
     constructor(
         private modal: NgbModal,
@@ -54,11 +63,27 @@ export class ItemRequestDialogComponent extends DialogComponent {
         };
 
         return this.pcrud.retrieve('auir', this.requestId, flesh)
-        .toPromise().then(req => this.request = req);
+        .toPromise().then(req => {
+            this.request = req;
+            this.languageEntries = [];
+            if (this.hasCustomLang()) {
+                this.languageEntries.push({id: req.language(), label: req.language()});
+            }
+            this.languages.forEach(l => this.languageEntries.push({id: l, label: l}));
+        });
     }
 
     setRouteTo(value: any) {
         console.log('route to is ', value);
+    }
+
+    hasCustomLang(): boolean {
+        if (this.request) {
+            let lang = this.request.language();
+            return !this.languages.includes(lang);
+        }
+
+        return false;
     }
 
     save() {

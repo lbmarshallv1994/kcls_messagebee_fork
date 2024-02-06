@@ -16,11 +16,17 @@
     </div>
     <div class="row mt-3">
       <div class="col-3" i18n>Title</div>
-      <div class="col-9">{{request.title()}}</div>
+      <div class="col-9">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.title($event)" [ngModel]="request.title()"/>
+      </div>
     </div>
     <div class="row mt-3">
       <div class="col-3" i18n>Author</div>
-      <div class="col-9">{{request.author()}}</div>
+      <div class="col-9">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.author($event)" [ngModel]="request.author()"/>
+      </div>
     </div>
     <div class="row mt-3">
       <div class="col-3" i18n>Publication Year</div>
@@ -37,14 +43,26 @@
       </div>
     </div>
     <div class="row mt-3">
+      <div class="col-3" i18n>Language</div>
+        <div class="col-4">
+        <eg-combobox 
+          allowFreeText="true" i18n-placeholder placeholder="Language..."
+          [startId]="request.language()"
+          (onChange)="request.language($event ? $event.id || $event.label : null)"
+          [entries]="languageEntries">
+        </eg-combobox>
+      </div>
+    </div>
+    <div class="row mt-3">
       <div class="col-3" i18n>Route To</div>
       <div class="col-4">
-        <select (change)="setRouteTo($event)" 
-          [ngModel]="request.route_to() || ''" class="form-control">
-          <option value="" i18n>&lt;Unset&gt;</option>
-          <option value="acq" i18n>Acquisitions</option>
-          <option value="ill" i18n>ILL</option>
-        </select>
+        <eg-combobox (onChange)="setRouteTo($event)"
+          i18n-placeholder placeholder="Route To...">
+          <eg-combobox-entry entryId="acq" entryLabel="Acquisitions" 
+            i18n-entryLabel></eg-combobox-entry>
+          <eg-combobox-entry entryId="ill" entryLabel="ILL"
+            i18n-entryLabel></eg-combobox-entry>
+        </eg-combobox>
       </div>
     </div>
   </div>
