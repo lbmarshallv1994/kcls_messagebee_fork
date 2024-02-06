@@ -26,8 +26,25 @@
       <div class="col-3" i18n>Publication Year</div>
       <div class="col-2">
         <input class="form-control" type="number" min="1900"
-          (ngModelChange)="request.pubdate($event)"
-          [ngModel]="request.pubdate()"/>
+          (ngModelChange)="request.pubdate($event)" [ngModel]="request.pubdate()"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Publisher</div>
+      <div class="col-9">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.publisher($event)" [ngModel]="request.publisher()"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Route To</div>
+      <div class="col-4">
+        <select (change)="setRouteTo($event)" 
+          [ngModel]="request.route_to() || ''" class="form-control">
+          <option value="" i18n>&lt;Unset&gt;</option>
+          <option value="acq" i18n>Acquisitions</option>
+          <option value="ill" i18n>ILL</option>
+        </select>
       </div>
     </div>
   </div>

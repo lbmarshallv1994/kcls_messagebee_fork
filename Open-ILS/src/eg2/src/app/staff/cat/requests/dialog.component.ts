@@ -57,6 +57,10 @@ export class ItemRequestDialogComponent extends DialogComponent {
         .toPromise().then(req => this.request = req);
     }
 
+    setRouteTo(value: any) {
+        console.log('route to is ', value);
+    }
+
     save() {
         this.pcrud.update(this.request).toPromise().then(_ => this.close(true));
     }
