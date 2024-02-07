@@ -55,6 +55,7 @@ export class ItemRequestComponent implements OnInit {
             let base: any = {
                 complete_date: null,
                 cancel_date: null,
+                reject_date: null,
                 '-or': []
             };
 
@@ -66,6 +67,10 @@ export class ItemRequestComponent implements OnInit {
             }
             if (this.showRouteToNull) {
                 base['-or'].push({route_to: null});
+            }
+
+            if (base['-or'].length === 0) {
+                delete base['-or'];
             }
 
             const query: any = new Array();
