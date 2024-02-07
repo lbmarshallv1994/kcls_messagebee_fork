@@ -82,7 +82,12 @@ export class ItemRequestDialogComponent extends DialogComponent {
         return false;
     }
 
-    save() {
+    save(claim?: boolean) {
+        if (claim) {
+            this.request.claimed_by(this.auth.user().id());
+            this.request.claim_date('now');
+        }
+
         let promise = Promise.resolve();
 
         if (!this.request.route_to()) {
