@@ -104,8 +104,16 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-warning" (click)="close(false)" i18n>Cancel</button>
-    <button type="button" class="btn btn-success ms-2" (click)="save()" i18n>Save</button>
-    <button type="button" class="btn btn-primary ms-2" (click)="save(true)" i18n>Save &amp; Claim</button>
+    <button type="button" class="btn btn-info me-auto" 
+      (click)="createIll()" i18n>Save &amp; Create ILL</button>
+
+    <button type="button" class="btn btn-warning" 
+      (click)="close(false)" i18n>Cancel</button>
+
+    <button type="button" class="btn btn-success ms-2" 
+      (click)="save()" i18n>Save</button>
+
+    <button type="button" class="btn btn-primary ms-2" 
+      (click)="save(true)" i18n>Save &amp; Claim</button>
   </div>
 </ng-template>

@@ -1,4 +1,5 @@
 import {Component, Input, ViewChild} from '@angular/core';
+import {Location} from '@angular/common';
 import {NetService} from '@eg/core/net.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
@@ -32,6 +33,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
     constructor(
         private modal: NgbModal,
+        private ngLocation: Location,
         private toast: ToastService,
         private net: NetService,
         private evt: EventService,
@@ -82,7 +84,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
         return false;
     }
 
-    save(claim?: boolean) {
+    save(claim?: boolean): Promise<void> {
         if (claim) {
             this.request.claimed_by(this.auth.user().id());
             this.request.claim_date('now');
@@ -101,11 +103,29 @@ export class ItemRequestDialogComponent extends DialogComponent {
             });
         }
 
-        promise.then(_ => {
+        return promise.then(_ => {
             this.pcrud.update(this.request).toPromise()
             .then(_ => this.close(true))
         });
     }
+
+    createIll() {
+        this.save().then(_ => this.createIllRequest());
+    }
+
+    createIllRequest() {
+        let req = this.request;
+
+        let url = '/staff/cat/ill/track?';
+        url += `title=${encodeURIComponent(req.title())}`;
+        url += `&patronBarcode=${encodeURIComponent(req.usr().card().barcode())}`;
+        url += `&illno=${encodeURIComponent(req.illno())}`;
+
+        url = this.ngLocation.prepareExternalUrl(url);
+
+        window.open(url);
+    }
+
 }
 
 

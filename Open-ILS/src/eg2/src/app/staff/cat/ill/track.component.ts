@@ -69,6 +69,10 @@ export class TrackIllComponent implements OnInit {
             if (params.get('patronBarcode')) {
                 this.patronBarcode = params.get('patronBarcode');
             }
+
+            if (params.get('illno')) {
+                this.callnumber = 'IL' + params.get('illno');
+            }
         });
 
         this.marcDoc = new DOMParser().parseFromString(STUB_MARC, "text/xml");

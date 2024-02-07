@@ -22,6 +22,7 @@ export class ItemRequestComponent implements OnInit {
     gridDataSource: GridDataSource = new GridDataSource();
     showRouteToIll = true;
     showRouteToAcq = true;
+    showRouteToNull = true;
     cellTextGenerator: GridCellTextGenerator;
 
     @ViewChild('grid') private grid: GridComponent;
@@ -51,16 +52,20 @@ export class ItemRequestComponent implements OnInit {
             }
 
             // base query to grab everything
-            let base = {
+            let base: any = {
                 complete_date: null,
                 cancel_date: null,
-                route_to: ['ill', 'acq']
-            }
+                '-or': []
+            };
 
-            if (!this.showRouteToIll) {
-                base.route_to = ['acq'];
-            } else if (!this.showRouteToAcq) {
-                base.route_to = ['ill'];
+            if (this.showRouteToIll) {
+                base['-or'].push({route_to: 'ill'});
+            }
+            if (this.showRouteToAcq) {
+                base['-or'].push({route_to: 'acq'});
+            }
+            if (this.showRouteToNull) {
+                base['-or'].push({route_to: null});
             }
 
             const query: any = new Array();
@@ -94,6 +99,11 @@ export class ItemRequestComponent implements OnInit {
 
     toggleRouteToAcq(action: boolean) {
         this.showRouteToAcq = action;
+        this.grid.reload();
+    }
+
+    toggleRouteToNull(action: boolean) {
+        this.showRouteToNull = action;
         this.grid.reload();
     }
 
@@ -139,6 +149,7 @@ export class ItemRequestComponent implements OnInit {
     }
 
 
+    /*
     createIllRequest(reqs: IdlObject[]) {
         reqs = [].concat(reqs);
         let req = reqs[0];
@@ -152,5 +163,6 @@ export class ItemRequestComponent implements OnInit {
 
         window.open(url);
     }
+    */
 }
 
