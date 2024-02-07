@@ -160,24 +160,6 @@ export class CreateRequestComponent implements OnInit {
         return true;
     }
 
-    // TODO move this to the API and provide a flag to skip
-    // the calculation for staff-applied values.
-    setRouteTo(values: Hash) {
-        values.route_to = 'acq';
-        const fmt = this.requests.selectedFormat || '';
-
-        if (fmt === 'book') {
-            if (values.pubdate) {
-                const thisYear = new Date().getFullYear();
-                if ((thisYear - ILL_ROUTE_AGE) > Number(values.pubdate)) {
-                    values.route_to = 'ill';
-                }
-            }
-        } else if (ILL_FORMATS.includes(fmt)) {
-            values.route_to = 'ill';
-        }
-    }
-
     submitRequest(): boolean {
         if (!this.canSubmit()) { return false; }
 
@@ -190,7 +172,6 @@ export class CreateRequestComponent implements OnInit {
 
         this.requestSubmitted = false;
         this.requestSubmitError = false;
-        this.setRouteTo(values);
 
         console.debug('Submitting request', values);
 

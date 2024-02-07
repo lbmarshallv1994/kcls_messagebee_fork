@@ -16117,6 +16117,8 @@ SELECT  usr,
 			<field reporter:label="Claim Date" name="claim_date" reporter:datatype="timestamp"/>
 			<field reporter:label="Claimed By" name="claimed_by" reporter:datatype="link"/>
 			<field reporter:label="Vendor" name="vendor" reporter:datatype="text"/>
+			<field reporter:label="Price" name="price" reporter:datatype="money"/>
+			<field reporter:label="ILL Number" name="illno" reporter:datatype="text"/>
 			<field reporter:label="Reject Date" name="reject_date" reporter:datatype="timestamp"/>
 			<field reporter:label="Rejected By" name="rejected_by" reporter:datatype="link"/>
 			<field reporter:label="Reject Reason" name="reject_reason" reporter:datatype="text"/>

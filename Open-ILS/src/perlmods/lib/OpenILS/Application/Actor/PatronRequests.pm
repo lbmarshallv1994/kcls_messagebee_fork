@@ -7,9 +7,70 @@ use OpenILS::Utils::CStoreEditor q/:funcs/;
 use OpenILS::Utils::Fieldmapper;
 use OpenSRF::Utils::JSON;
 use OpenILS::Event;
+use DateTime;
 my $U = "OpenILS::Application::AppUtils";
 
 my @REQ_FIELDS = qw/identifier format language title author pubdate publisher notes route_to/; 
+
+# "Books" whose publication date is older than this many years
+# goes to ILL.
+my $ILL_ROUTE_AGE_YEARS = 2;
+
+# These format salways go to ILL.                                                     
+my @ILL_FORMATS = ['journal', 'microfilm', 'article'];
+
+sub apply_route_to {
+    my ($request) = @_;
+
+    # Avoid clobbering a route-to value which may have been applied
+    # by staff.
+    return if $request->route_to;
+
+    my $route_to = 'acq';
+
+    if ($request->format eq 'book') {
+        if ( (my $pubyear = $request->pubdate) ) {
+            if ($pubyear =~ /^\d{4}$/) {
+                if ((DateTime->now->year - $ILL_ROUTE_AGE_YEARS) > $pubyear) {
+                    $route_to = 'ill';
+                }
+            }
+        }
+    } elsif (grep {$_} @ILL_FORMATS) {
+        $route_to = 'ill';
+    }
+
+    $request->route_to($route_to);
+}
+
+__PACKAGE__->register_method(
+    method      => 'get_route_to',
+    api_name    => 'open-ils.actor.patron-request.get_route_to',
+    signature => {
+        desc => q/Calculate the route-to value for a request/,
+        params => [
+            {desc => 'Patron authtoken', type => 'string'},
+            {desc => 'Request', type => 'object'}
+        ],
+        return => {
+            desc => q/Route to value/,
+            type => 'string'
+        }
+    }
+);
+
+sub get_route_to {
+    my ($self, $client, $auth, $request) = @_;
+    my $e = new_editor(authtoken => $auth);
+
+    return $e->event unless $e->checkauth;
+    return $e->event unless $e->allowed('STAFF_LOGIN');
+
+    apply_route_to($request);
+
+    return $request->route_to;
+}
+
 
 __PACKAGE__->register_method(
     method      => 'create_request',
@@ -50,6 +111,8 @@ sub create_request {
         $request->$field($values->{$field}) if $values->{$field};
     }
 
+    apply_route_to($request);
+
     $e->create_actor_user_item_request($request) or return $e->die_event;
 
     $e->commit;
@@ -57,7 +120,6 @@ sub create_request {
     return {
         request_id => $request->id
     };
-
 }
 
 __PACKAGE__->register_method (

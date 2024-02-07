@@ -73,10 +73,6 @@ export class ItemRequestDialogComponent extends DialogComponent {
         });
     }
 
-    setRouteTo(value: any) {
-        console.log('route to is ', value);
-    }
-
     hasCustomLang(): boolean {
         if (this.request) {
             let lang = this.request.language();
@@ -87,7 +83,23 @@ export class ItemRequestDialogComponent extends DialogComponent {
     }
 
     save() {
-        this.pcrud.update(this.request).toPromise().then(_ => this.close(true));
+        let promise = Promise.resolve();
+
+        if (!this.request.route_to()) {
+            promise = this.net.request(
+                'open-ils.actor',
+                'open-ils.actor.patron-request.get_route_to',
+                this.auth.token(), this.request
+            ).toPromise().then(routeTo => {
+                console.log('Route-To calculated as ' + routeTo);
+                this.request.route_to(routeTo);
+            });
+        }
+
+        promise.then(_ => {
+            this.pcrud.update(this.request).toPromise()
+            .then(_ => this.close(true))
+        });
     }
 }
 

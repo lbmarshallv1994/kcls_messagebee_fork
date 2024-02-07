@@ -10,8 +10,8 @@
       <div class="col-9">
         {{request.usr().family_name()}}, {{request.usr().first_given_name()}}
         (<a *ngIf="request.usr().card()" target="_blank"
-            routerLink="/staff/circ/patron/{{request.usr().id()}}/checkout">
-            {{request.usr().card().barcode()}}</a>)
+            routerLink="/staff/circ/patron/{{request.usr().id()}}/checkout"
+            >{{request.usr().card().barcode()}}</a>)
       </div>
     </div>
     <div class="row mt-3">
@@ -26,6 +26,13 @@
       <div class="col-9">
         <input class="form-control" type="text"
           (ngModelChange)="request.author($event)" [ngModel]="request.author()"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>ISBN/UPC/Etc.</div>
+      <div class="col-9">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.identifier($event)" [ngModel]="request.identifier()"/>
       </div>
     </div>
     <div class="row mt-3">
@@ -47,7 +54,7 @@
         <div class="col-4">
         <eg-combobox 
           allowFreeText="true" i18n-placeholder placeholder="Language..."
-          [startId]="request.language()"
+          [startId]="request.language() || ''"
           (onChange)="request.language($event ? $event.id || $event.label : null)"
           [entries]="languageEntries">
         </eg-combobox>
@@ -56,13 +63,36 @@
     <div class="row mt-3">
       <div class="col-3" i18n>Route To</div>
       <div class="col-4">
-        <eg-combobox (onChange)="setRouteTo($event)"
+        <eg-combobox 
+          [startId]="request.route_to()"
+          (onChange)="request.route_to($event ? $event.id : null)"
           i18n-placeholder placeholder="Route To...">
           <eg-combobox-entry entryId="acq" entryLabel="Acquisitions" 
             i18n-entryLabel></eg-combobox-entry>
           <eg-combobox-entry entryId="ill" entryLabel="ILL"
             i18n-entryLabel></eg-combobox-entry>
         </eg-combobox>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Vendor</div>
+      <div class="col-4">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.vendor($event)" [ngModel]="request.vendor()"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>Price</div>
+      <div class="col-4">
+        <input class="form-control" type="number" step="0.1" min="0.00"
+          (ngModelChange)="request.price($event)" [ngModel]="request.price()"/>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-3" i18n>ILL#</div>
+      <div class="col-4">
+        <input class="form-control" type="text"
+          (ngModelChange)="request.illno($event)" [ngModel]="request.illno()"/>
       </div>
     </div>
   </div>

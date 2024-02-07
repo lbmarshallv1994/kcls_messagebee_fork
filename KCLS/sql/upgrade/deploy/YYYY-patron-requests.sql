@@ -26,6 +26,8 @@ CREATE TABLE actor.usr_item_request(
     claim_date      TIMESTAMPTZ,
     claimed_by      INTEGER REFERENCES actor.usr(id),
     vendor          TEXT,
+    price           NUMERIC(8, 2),
+    illno           TEXT,
 
     reject_date     TIMESTAMPTZ,
     rejected_by     INTEGER REFERENCES actor.usr(id),
