@@ -20,8 +20,16 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 export class ItemRequestDialogComponent extends DialogComponent {
 
-    requestId: number | null = null;
     request: IdlObject = null;
+    requestId: number | null = null;
+
+    statuses: ComboboxEntry[]  = [
+        {id: 'pending',    label: $localize`Pending`},
+        {id: 'processing', label: $localize`Processing`},
+        {id: 'complete',   label: $localize`Complete`},
+        {id: 'canceled',   label: $localize`Canceled`},
+        {id: 'rejected',   label: $localize`Rejected`},
+    ]
 
     languages = [
         $localize`English`,
@@ -78,7 +86,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
     hasCustomLang(): boolean {
         if (this.request) {
             let lang = this.request.language();
-            return !this.languages.includes(lang);
+            return lang !== null && !this.languages.includes(lang);
         }
 
         return false;
@@ -107,6 +115,28 @@ export class ItemRequestDialogComponent extends DialogComponent {
             this.pcrud.update(this.request).toPromise()
             .then(_ => this.close(true))
         });
+    }
+
+    clearClaimedBy() {
+        this.request.claimed_by(null);
+        this.request.claim_date(null);
+    }
+
+    getStatus(): string {
+        let req = this.request;
+
+        if (!req)                { return 'pending'; }
+        if (req.cancel_date())   { return 'canceled'; }
+        if (req.reject_date())   { return 'rejected'; }
+        if (req.claim_date())    { return 'processing'; }
+        if (req.complete_date()) { return 'complete'; }
+
+        return 'pending';
+    }
+
+    changeStatus(entry: ComboboxEntry) {
+        console.log('STATUS SET TO ', entry);
+        // TODO
     }
 
     createIll() {
