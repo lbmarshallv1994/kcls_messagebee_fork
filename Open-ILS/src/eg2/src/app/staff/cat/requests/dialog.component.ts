@@ -25,7 +25,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
     statuses: ComboboxEntry[]  = [
         {id: 'pending',    label: $localize`Pending`},
-        {id: 'processing', label: $localize`Processing`},
+        {id: 'processing', label: $localize`In Process`},
         {id: 'complete',   label: $localize`Complete`},
         {id: 'canceled',   label: $localize`Canceled`},
         {id: 'rejected',   label: $localize`Rejected`},
@@ -123,20 +123,41 @@ export class ItemRequestDialogComponent extends DialogComponent {
     }
 
     getStatus(): string {
+        let code = 'pending';
+
         let req = this.request;
+        if (req) {
+            if (req.cancel_date()) {
+                code = 'canceled';
+            } else if (req.reject_date()) {
+                code = 'rejected';
+            } else if (req.claim_date()) {
+                code = 'processing';
+            } else if (req.complete_date()) {
+                code = 'complete';
+            }
+        }
 
-        if (!req)                { return 'pending'; }
-        if (req.cancel_date())   { return 'canceled'; }
-        if (req.reject_date())   { return 'rejected'; }
-        if (req.claim_date())    { return 'processing'; }
-        if (req.complete_date()) { return 'complete'; }
-
-        return 'pending';
+        return this.statuses.filter(s => s.id === code)[0].label;
     }
 
-    changeStatus(entry: ComboboxEntry) {
-        console.log('STATUS SET TO ', entry);
-        // TODO
+    setStatus(code: string) {
+        switch (code) {
+            case 'complete':
+                this.request.cancel_date(null);
+                this.request.reject_date(null);
+                this.request.rejected_by(null);
+                this.request.reject_reason(null);
+                this.request.complete_date('now');
+                break;
+
+            case 'rejected':
+                this.request.cancel_date(null);
+                this.request.reject_date('now');
+                this.request.rejected_by(this.auth.user().id());
+                this.request.complete_date(null);
+                break;
+        }
     }
 
     createIll() {

@@ -23,6 +23,7 @@ export class ItemRequestComponent implements OnInit {
     showRouteToIll = true;
     showRouteToAcq = true;
     showRouteToNull = true;
+    showRejected = false;
     cellTextGenerator: GridCellTextGenerator;
 
     @ViewChild('grid') private grid: GridComponent;
@@ -55,10 +56,12 @@ export class ItemRequestComponent implements OnInit {
             let base: any = {
                 complete_date: null,
                 cancel_date: null,
-                reject_date: null,
                 '-or': []
             };
 
+            if (!this.showRejected) {
+                base.reject_date = null;
+            }
             if (this.showRouteToIll) {
                 base['-or'].push({route_to: 'ill'});
             }
@@ -68,10 +71,10 @@ export class ItemRequestComponent implements OnInit {
             if (this.showRouteToNull) {
                 base['-or'].push({route_to: null});
             }
-
             if (base['-or'].length === 0) {
                 delete base['-or'];
             }
+
 
             const query: any = new Array();
             query.push(base);
@@ -95,6 +98,11 @@ export class ItemRequestComponent implements OnInit {
 
             return this.pcrud.search('auir', query, flesh);
         };
+    }
+
+    toggleShowRejected(action: boolean) {
+        this.showRejected = action;
+        this.grid.reload();
     }
 
     toggleRouteToIll(action: boolean) {

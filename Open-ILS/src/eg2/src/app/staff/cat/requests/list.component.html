@@ -22,20 +22,24 @@
   [showDeclaredFieldsOnly]="true" [filterable]="true">
 
   <eg-grid-toolbar-checkbox i18n-label label="Route to ILL"
-    initialValue="showRouteToIll"
+    [initialValue]="showRouteToIll"
     #routeToIllCbox (onChange)="toggleRouteToIll($event)">
   </eg-grid-toolbar-checkbox>
 
   <eg-grid-toolbar-checkbox i18n-label label="Route to Acq"
-    initialValue="showRouteToAcq"
+    [initialValue]="showRouteToAcq"
     #routeToAcqCbox (onChange)="toggleRouteToAcq($event)">
   </eg-grid-toolbar-checkbox>
 
   <eg-grid-toolbar-checkbox i18n-label label="Un-Routed"
-    initialValue="showRouteToNull"
+    [initialValue]="showRouteToNull"
     #routeToAcqCbox (onChange)="toggleRouteToNull($event)">
   </eg-grid-toolbar-checkbox>
 
+  <eg-grid-toolbar-checkbox i18n-label label="Include Rejected"
+    [initialValue]="showRejected"
+    #routeToAcqCbox (onChange)="toggleShowRejected($event)">
+  </eg-grid-toolbar-checkbox>
 
   <eg-grid-toolbar-action i18n-label label="Claim for Processing"
     (onClick)="claimItems($event)">
