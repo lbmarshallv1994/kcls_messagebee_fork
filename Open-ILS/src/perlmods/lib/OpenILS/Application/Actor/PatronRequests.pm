@@ -31,7 +31,7 @@ sub apply_route_to {
     if ($request->format eq 'book') {
         if ( (my $pubyear = $request->pubdate) ) {
             if ($pubyear =~ /^\d{4}$/) {
-                if ((DateTime->now->year - $ILL_ROUTE_AGE_YEARS) > $pubyear) {
+                if ($pubyear < (DateTime->now->year - $ILL_ROUTE_AGE_YEARS)) {
                     $route_to = 'ill';
                 }
             }

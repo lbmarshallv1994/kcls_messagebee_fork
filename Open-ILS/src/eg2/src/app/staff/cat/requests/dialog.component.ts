@@ -1,7 +1,7 @@
 import {Component, Input, ViewChild} from '@angular/core';
 import {Location} from '@angular/common';
 import {NetService} from '@eg/core/net.service';
-import {IdlObject} from '@eg/core/idl.service';
+import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -22,6 +22,8 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
     request: IdlObject = null;
     requestId: number | null = null;
+    // Clone of in-database request for comparison.
+    sourceRequest: IdlObject = null;
 
     statuses: ComboboxEntry[]  = [
         {id: 'pending',    label: $localize`Pending`},
@@ -43,6 +45,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
         private modal: NgbModal,
         private ngLocation: Location,
         private toast: ToastService,
+        private idl: IdlService,
         private net: NetService,
         private evt: EventService,
         private pcrud: PcrudService,
@@ -53,6 +56,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
     open(args: NgbModalOptions): Observable<boolean> {
         this.request = null;
+        this.sourceRequest = null;
 
         if (!this.requestId) {
             return throwError('request ID required');
@@ -75,6 +79,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
         return this.pcrud.retrieve('auir', this.requestId, flesh)
         .toPromise().then(req => {
             this.request = req;
+            this.sourceRequest = this.idl.clone(req);
             this.languageEntries = [];
             if (this.hasCustomLang()) {
                 this.languageEntries.push({id: req.language(), label: req.language()});
@@ -96,6 +101,18 @@ export class ItemRequestDialogComponent extends DialogComponent {
         if (claim) {
             this.request.claimed_by(this.auth.user().id());
             this.request.claim_date('now');
+        }
+
+        // Various changes to the request require we update the
+        // routing info.  However, we don't want to override any
+        // routing info manually applied by staff
+        if (this.request.route_to() === this.sourceRequest.route_to()) {
+            if (this.request.pubdate() !== this.sourceRequest.pubdate() ||
+                this.request.format() !== this.sourceRequest.format()) {
+
+                // Clear the value to force an update.
+                this.request.route_to(null);
+            }
         }
 
         let promise = Promise.resolve();

@@ -24,6 +24,7 @@ export class ItemRequestComponent implements OnInit {
     showRouteToAcq = true;
     showRouteToNull = true;
     showRejected = false;
+    showClaimedByMe = false;
     cellTextGenerator: GridCellTextGenerator;
 
     @ViewChild('grid') private grid: GridComponent;
@@ -62,6 +63,9 @@ export class ItemRequestComponent implements OnInit {
             if (!this.showRejected) {
                 base.reject_date = null;
             }
+            if (this.showClaimedByMe) {
+                base.claimed_by = this.auth.user().id();
+            }
             if (this.showRouteToIll) {
                 base['-or'].push({route_to: 'ill'});
             }
@@ -74,7 +78,6 @@ export class ItemRequestComponent implements OnInit {
             if (base['-or'].length === 0) {
                 delete base['-or'];
             }
-
 
             const query: any = new Array();
             query.push(base);
@@ -98,6 +101,11 @@ export class ItemRequestComponent implements OnInit {
 
             return this.pcrud.search('auir', query, flesh);
         };
+    }
+
+    toggleClaimedByMe(action: boolean) {
+        this.showClaimedByMe = action;
+        this.grid.reload();
     }
 
     toggleShowRejected(action: boolean) {

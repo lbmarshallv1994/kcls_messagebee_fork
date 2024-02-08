@@ -36,6 +36,11 @@
     #routeToAcqCbox (onChange)="toggleRouteToNull($event)">
   </eg-grid-toolbar-checkbox>
 
+  <eg-grid-toolbar-checkbox i18n-label label="Claimed by Me"
+    [initialValue]="showClaimedByMe"
+    #routeToAcqCbox (onChange)="toggleClaimedByMe($event)">
+  </eg-grid-toolbar-checkbox>
+
   <eg-grid-toolbar-checkbox i18n-label label="Include Rejected"
     [initialValue]="showRejected"
     #routeToAcqCbox (onChange)="toggleShowRejected($event)">
