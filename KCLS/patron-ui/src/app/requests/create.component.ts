@@ -1,4 +1,6 @@
 import {Component, OnInit} from '@angular/core';
+import {Observable} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
 import {Router} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Title}  from '@angular/platform-browser';
@@ -12,10 +14,6 @@ import {debounceTime} from 'rxjs/operators';
 const BC_URL = 'https://kcls.bibliocommons.com/item/show/';
 const BC_CODE = '082';
 const MIN_ID_LENGTH = 6;
-// Book requests older than this many ears are routed to ILL
-const ILL_ROUTE_AGE = 2;
-// These always go to ILL.
-const ILL_FORMATS = ['journal', 'microfilm', 'article'];
 
 interface SuggestedRecord {
     id: number,
@@ -38,6 +36,14 @@ export class CreateRequestComponent implements OnInit {
     searchingRecords = false;
     previousSearch = '';
     holdRequestUrl = '';
+
+    languages = [
+        $localize`English`,
+        $localize`Español / Spanish`,
+        $localize`Français / French`,
+    ];
+
+    filteredLangs: Observable<string[]> = new Observable<string[]>();
 
     controls: {[field: string]: FormControl} = {
         title: new FormControl({value: '', disabled: true}, [Validators.required]),
@@ -68,6 +74,16 @@ export class CreateRequestComponent implements OnInit {
 
         this.controls.identifier.valueChanges.pipe(debounceTime(500))
         .subscribe(ident => this.identLookup(ident));
+
+        this.filteredLangs = this.controls.language.valueChanges.pipe(
+            startWith(''),
+            map(value => this.filterLangs(value || '')),
+        );
+    }
+
+    filterLangs(value: string): string[] {
+        const val = value.toLowerCase();
+        return this.languages.filter(lang => lang.toLowerCase().includes(val));
     }
 
     identLookup(ident: string): Promise<void> {

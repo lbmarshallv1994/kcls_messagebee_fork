@@ -89,12 +89,12 @@
     <div class="flex p-2">
       <mat-form-field class="flex-1">
         <mat-label i18n>Select a Language</mat-label>
-        <mat-select [formControl]="controls.language">
-          <mat-option value="eng" i18n>English</mat-option>
-          <mat-option value="spa" i18n>Español / Spanish</mat-option>
-          <mat-option value="fre" i18n>Français / French</mat-option>
-          <mat-option value="other" i18n>Other</mat-option>
-        </mat-select>
+        <input type="text" matInput [formControl]="controls.language" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete">
+          @for (option of filteredLangs | async; track option) {
+            <mat-option [value]="option">{{option}}</mat-option>
+          }
+        </mat-autocomplete>
       </mat-form-field>
     </div>
 
