@@ -3,7 +3,7 @@ import {Title} from '@angular/platform-browser';
 import {Gateway, Hash} from '../gateway.service';
 import {AppService} from '../app.service';
 
-// We need to defined create_date as a string so it can be used
+// Define create_date as a string so it can be used
 // in the Date pipe in the template.
 type Request = Hash & {create_date: string};
 
@@ -54,6 +54,18 @@ export class RequestListComponent implements OnInit {
             this.cancelRequested = null;
             this.load();
         });
+    }
+
+    getStatus(req: Request): string {
+        if (req.reject_date) {
+            return $localize`Rejected`;
+        } else if (req.complete_date) {
+            return $localize`Completed`;
+        } else if (req.claim_date) {
+            return $localize`Processing`;
+        } else {
+            return $localize`Pending`;
+        }
     }
 }
 

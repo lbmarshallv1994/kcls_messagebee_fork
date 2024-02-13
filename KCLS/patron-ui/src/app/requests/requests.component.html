@@ -5,14 +5,22 @@
     <div class="flex justify-center">
       <h1 i18n>Request an Item</h1>
     </div>
-    <div class="flex justify-center mt-3">
+
+    <div *ngIf="tab === 'create'" class="flex justify-center mt-3">
       <a routerLink="/requests/list" class="border rounded p-2 mat-icon-plus-text" i18n>
         <span class="material-icons mr-2">list</span>
-        View my requests
+        View My Requests
       </a>
     </div>
 
-    <div class="flex p-2 mt-10">
+    <div *ngIf="tab !== 'create'" class="flex justify-center mt-3">
+      <a routerLink="/requests/create" class="border rounded p-2 mat-icon-plus-text" i18n>
+        <span class="material-icons mr-2">list</span>
+        New Request
+      </a>
+    </div>
+
+    <div *ngIf="tab === 'create'" class="flex p-2 mt-10">
       <mat-form-field class="flex-1">
         <mat-label i18n>Select a Format</mat-label>
         <mat-select [formControl]="controls.format">
