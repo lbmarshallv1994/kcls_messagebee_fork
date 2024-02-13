@@ -4794,8 +4794,8 @@ VALUES (
 END IF; END $INSERT$;
 -----------------------------------------------------------------------------
 
---COMMIT;
-ROLLBACK;
+COMMIT;
+--ROLLBACK;
 
 SELECT 'Analyzing hold_req', CLOCK_TIMESTAMP();
 
