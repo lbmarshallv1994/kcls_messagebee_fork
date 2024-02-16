@@ -33,11 +33,13 @@ export class ItemRequestDialogComponent extends DialogComponent {
         {id: 'rejected',   label: $localize`Rejected`},
     ]
 
+    /* Do we need to list these for staff?
     languages = [
         $localize`English`,
-        $localize`Spanish`,
-        $localize`French`,
+        $localize`Español / Spanish`,
+        $localize`Français / French`,
     ];
+    */
 
     languageEntries: ComboboxEntry[] = [];
 
@@ -80,14 +82,17 @@ export class ItemRequestDialogComponent extends DialogComponent {
         .toPromise().then(req => {
             this.request = req;
             this.sourceRequest = this.idl.clone(req);
+            /*
             this.languageEntries = [];
             if (this.hasCustomLang()) {
                 this.languageEntries.push({id: req.language(), label: req.language()});
             }
             this.languages.forEach(l => this.languageEntries.push({id: l, label: l}));
+            */
         });
     }
 
+    /*
     hasCustomLang(): boolean {
         if (this.request) {
             let lang = this.request.language();
@@ -96,6 +101,7 @@ export class ItemRequestDialogComponent extends DialogComponent {
 
         return false;
     }
+    */
 
     save(claim?: boolean): Promise<void> {
         if (claim) {
