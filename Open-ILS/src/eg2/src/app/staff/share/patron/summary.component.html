@@ -3,7 +3,7 @@
 
   <div class="row d-flex patron-status-color rounded {{patronStatusColor()}}">
     <div class="flex-1 pt-1 {{patronStatusColor()}}">
-      <h4 class="font-weight-bold pl-1" i18n>
+      <h4 class="font-weight-bold ps-1" i18n>
         {{patronService.namePart(p(), 'family_name')}}, 
         {{patronService.namePart(p(), 'first_given_name')}} 
         {{patronService.namePart(p(), 'second_given_name')}}
@@ -24,9 +24,9 @@
       <fieldset>
         <legend class="d-flex" [ngClass]="{'alert alert-danger p-0': addr.valid() == 'f'}">
           <div class="flex-1">
-            <span *ngIf="addrIsMailing(addr)" class="mr-1" i18n>
+            <span *ngIf="addrIsMailing(addr)" class="me-1" i18n>
               Mailing
-              <span *ngIf="addrIsBilling(addr)" class="pl-1 pr-1">/</span>
+              <span *ngIf="addrIsBilling(addr)" class="ps-1 pe-1">/</span>
             </span>
             <span *ngIf="addrIsBilling(addr)" i18n>Residential</span>
             <span *ngIf="!addrIsMailing(addr) && !addrIsBilling(addr)" i18n>
@@ -34,9 +34,9 @@
             </span>
           </div>
           <div>
-            <a class="mr-2" href="javascript:;" 
+            <a class="me-2" href="javascript:;" 
               (click)="copyAddress(addr)" i18n>copy</a>
-            <a class="mr-2" href="javascript:;" 
+            <a class="me-2" href="javascript:;" 
               (click)="printAddress(addr)" i18n>print</a>
           </div>
         </legend>
@@ -192,7 +192,7 @@
         <div>{{p().card().barcode()}}</div>
         <div>
           <a href="javascript:;" (click)="copyBarcode()" i18n>copy</a>
-          <a href="javascript:;" class="ml-2" (click)="printBarcode()" i18n>print</a>
+          <a href="javascript:;" class="ms-2" (click)="printBarcode()" i18n>print</a>
           <textarea id="patron-barcode-copy" rows="1"              
             style="display:none;visibility:hidden">{{p().card().barcode()}}</textarea>
         </div>
