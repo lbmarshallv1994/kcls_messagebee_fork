@@ -126,7 +126,7 @@
           [(ngModel)]="search.profile">
         </eg-profile-select>
       </div>
-      <div class="col-lg-2 pl-1 pe-1">
+      <div class="col-lg-2 ps-1 pe-1">
         <eg-org-select #homeLibSelect (onChange)="searchOrg = $event"
           persistKey="patron.search"
           [fallbackOrg]="org.root()"
