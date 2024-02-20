@@ -12,7 +12,7 @@
     <div *ngIf="searchContext.result.facetData[facetConf.facetClass]">
       <div *ngFor="let name of facetConf.facetOrder">
         <div class="row" *ngIf="facetHasData(facetConf.facetClass, name)">
-          <div class="card mb-2">
+          <div class="card p-0 mb-2">
             <!-- pending a facet-label-map in the DB, just map the 
                 newly collapsed facets to simple names -->
             <h4 class="card-header" i18n>
