@@ -398,6 +398,10 @@ export class CatalogService {
     }
 
     checkSearchEngine(): Promise<any> {
+        // KCLS: this is always on.
+        this.elastic.enabled = true;
+        return this.elastic.init();
+        /*
         return this.pcrud.retrieve('cgf', 'elastic.bib_search.enabled')
         .toPromise().then(flag => {
             if (flag && flag.enabled() === 't') {
@@ -405,6 +409,7 @@ export class CatalogService {
                 return this.elastic.init();
             }
         });
+        */
     }
 
     fetchCcvms(): Promise<void> {
