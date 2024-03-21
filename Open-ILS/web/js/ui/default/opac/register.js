@@ -340,6 +340,9 @@ function onsub() {
         return false;
     }
 
+
+    document.getElementById('main-submit').disabled = true;
+
     if (typeof ga === 'function') {
         console.debug('sending GA Submit event');
         ga('send', 'event', 'Full Application', 'submit', 'Forms');
