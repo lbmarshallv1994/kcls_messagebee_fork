@@ -129,7 +129,7 @@
         [disabled]="gridContext.toolbarActions.length === 0"
         (click)="toolbarActionsEditor.open().subscribe()">
         <span class="material-icons">menu</span>
-        <span class="ml-2" i18n>Manage Actions Menu</span>
+        <span class="ms-2" i18n>Manage Actions Menu</span>
       </button>
       <button nbgDropdownItem class="dropdown-item label-with-material-icon"
         (click)="colWidthConfig.isVisible = !colWidthConfig.isVisible">
@@ -149,18 +149,18 @@
       <a nbgDropdownItem class="dropdown-item label-with-material-icon"
         (click)="gridContext.resetColumns()">
         <span class="material-icons">restore</span>
-        <span class="ml-2" i18n>Reset Columns</span>
+        <span class="ms-2" i18n>Reset Columns</span>
       </a>
       <a nbgDropdownItem class="dropdown-item label-with-material-icon"
         (click)="generateCsvExportUrl($event)"
         [download]="csvExportFileName"
         [href]="csvExportUrl">
         <span class="material-icons">cloud_download</span>
-        <span class="ml-2" i18n>Download Full CSV</span>
+        <span class="ms-2" i18n>Download Full CSV</span>
       </a>
       <a class="dropdown-item label-with-material-icon" (click)="printHtml()">
         <span class="material-icons">print</span>
-        <span class="ml-2" i18n>Print Full Grid</span>
+        <span class="ms-2" i18n>Print Full Grid</span>
       </a>
 
       <div class="dropdown-divider"></div>
