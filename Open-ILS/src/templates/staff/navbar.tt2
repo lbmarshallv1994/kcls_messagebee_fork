@@ -487,12 +487,14 @@
               [% l('New Brief Record') %]
             </a>
           </li>
+          <!--
           <li>
             <a href="./acq/requests/list" target="_self">
               <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
               [% l('Patron Requests') %]
             </a>
           </li>
+          -->
           <li>
             <a href="./acq/legacy/picklist/bib_search" target="_self">
               <span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span>
