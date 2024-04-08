@@ -62,8 +62,10 @@ export class LineitemWorksheetComponent implements OnInit, AfterViewInit {
                 flesh_cancel_reason: true,
                 flesh_li_details: true,
                 flesh_fund: true,
-                flesh_copies: true,
-                flesh_location: true,
+                flesh_li_details_copy: true,
+                // flesh_copies: true, // repeats above, but different
+                flesh_li_details_location: true,
+                // flesh_location: true, // repeats above, but different
                 flesh_copy_location: true,
                 flesh_call_number: true,
                 flesh_li_details_receiver: true,
