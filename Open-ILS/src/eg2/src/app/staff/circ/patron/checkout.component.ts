@@ -63,6 +63,7 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
 
     constructor(
         private router: Router,
+        private route: ActivatedRoute,
         private store: StoreService,
         private serverStore: ServerStoreService,
         private org: OrgService,
@@ -78,6 +79,12 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit() {
+        this.route.paramMap.subscribe((params: ParamMap) => {
+            if (params.get("tab") === 'checkout') {
+                this.focusInput();
+            }
+        });
+
         this.circ.getNonCatTypes();
 
         this.gridDataSource.getRows = (pager: Pager, sort: any[]) => {
@@ -118,10 +125,21 @@ export class CheckoutComponent implements OnInit, AfterViewInit {
     focusInput() {
         // Somehow the body steals the focus after this call, hence
         // the setTimeout.
+        // Start with a quick focus, then fall back (below) again
+        // after a loger timeout.
         setTimeout(() => {
             const input = document.getElementById('barcode-input');
             if (input) { input.focus(); }
         });
+
+        // This is super hacky, but something is grabbing focus after a
+        // simple timeout (above), seemingly based on an actual timeout
+        // duration, and it's not easy to predict -- focus ends up on
+        // the Check Out Tab after navigating back from another tab.
+        setTimeout(() => {
+            const input = document.getElementById('barcode-input');
+            if (input) { input.focus(); }
+        }, 300);
     }
 
     collectParams(): Promise<CheckoutParams> {
