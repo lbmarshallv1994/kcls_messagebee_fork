@@ -48,7 +48,7 @@ export class LineitemBatchCopiesComponent implements OnInit {
 
     ngOnInit() {
         this.serverStore.getItem('acq.on_order.call_numbers')
-        .then(val => this.onOrderCallNumbers = val.sort());
+        .then(val => this.onOrderCallNumbers = val ? val.sort() : []);
     }
 
     // Propagate values from the batch edit bar into the indivudual LID's

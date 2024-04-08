@@ -275,7 +275,7 @@ export class LineitemListComponent implements OnInit {
         }).then(_ => {
             if (!this.disableBatchBar) {
                 return this.serverStore.getItem('acq.on_order.call_numbers')
-                .then(val => this.onOrderCallNumbers = val.sort());
+                .then(val => this.onOrderCallNumbers = val ? val.sort() : []);
             }
         });
     }
