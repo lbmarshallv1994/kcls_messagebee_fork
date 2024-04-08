@@ -50,8 +50,11 @@ export class TestPatronPasswordComponent implements OnInit, AfterViewInit {
     ngAfterViewInit() {
         let domId = 'password-input';
         if (!this.patronId) { domId = 'username-input'; }
-        const node = document.getElementById(domId) as HTMLInputElement;
-        if (node) { node.focus(); }
+
+        setTimeout(() => {
+            const node = document.getElementById(domId) as HTMLInputElement;
+            if (node) { node.focus(); }
+        });
     }
 
     retrieve() {
