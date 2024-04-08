@@ -136,8 +136,10 @@ export class PatronSearchComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        const node = document.getElementById('focus-this-input');
-        if (node) { node.focus(); }
+        setTimeout(() => {
+            const node = document.getElementById('focus-this-input');
+            if (node) { node.focus(); }
+        });
     }
 
     toggleExpandForm() {
