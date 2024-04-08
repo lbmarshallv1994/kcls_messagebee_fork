@@ -248,6 +248,13 @@ export class EditComponent implements OnInit {
         this.load();
     }
 
+    focusDob() {
+        setTimeout(() => {
+            const node = document.getElementById('au-dob-input');
+            if (node) { node.focus(); }
+        });
+    }
+
     load(): Promise<any> {
         this.loading = true;
         this.showForm = false;
@@ -266,6 +273,7 @@ export class EditComponent implements OnInit {
         .then(_ => this.setSmsCarriers())
         .then(_ => this.setFieldPatterns())
         .then(_ => this.showForm = true)
+        .then(_ => this.focusDob())
         // Not my preferred way to handle this, but some values are
         // applied to widgets slightly after the load() is done and the
         // widgets are rendered.  If a widget is required and has no
