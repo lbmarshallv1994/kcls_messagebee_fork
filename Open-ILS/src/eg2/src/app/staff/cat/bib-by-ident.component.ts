@@ -30,8 +30,10 @@ export class BibByIdentComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        const node = document.getElementById('bib-ident-value');
-        setTimeout(() => node.focus());
+        setTimeout(() => {
+            const node = document.getElementById('bib-ident-value');
+            setTimeout(() => node.focus());
+        });
     }
 
     search() {
