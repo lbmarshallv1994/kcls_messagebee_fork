@@ -48,6 +48,10 @@ export class TestPatronPasswordComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
+        this.focusInput();
+    }
+
+    focusInput() {
         let domId = 'password-input';
         if (!this.patronId) { domId = 'username-input'; }
 
@@ -55,6 +59,15 @@ export class TestPatronPasswordComponent implements OnInit, AfterViewInit {
             const node = document.getElementById(domId) as HTMLInputElement;
             if (node) { node.focus(); }
         });
+
+        // This is super hacky, but something is grabbing focus after a
+        // simple timeout (above), seemingly based on an actual timeout
+        // duration, and it's not easy to predict -- focus ends up on
+        // the Tab link after navigating back from another tab.
+        setTimeout(() => {
+            const input = document.getElementById(domId);
+            if (input) { input.focus(); }
+        }, 300);
     }
 
     retrieve() {
