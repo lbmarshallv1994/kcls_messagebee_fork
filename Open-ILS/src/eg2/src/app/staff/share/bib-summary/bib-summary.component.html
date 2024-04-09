@@ -21,18 +21,18 @@
     <div class="flex-1"></div>
     <div>
       <span i18n>Holds: {{summary.holdCount}}</span>
-        <span class="pl-2 pr-2"> | </span>
+        <span class="ps-2 pe-2"> | </span>
     </div>
     <ng-container *ngFor="let copyCount of summary.holdingsSummary; let copyIdx = index">
       <ng-container *ngIf="orgIsRoot(copyCount.org_unit)">
         <span i18n>Total Items: {{copyCount.count}}</span>
-        <span class="pl-2 pr-2"> | </span>
+        <span class="ps-2 pe-2"> | </span>
         <span i18n
-          [ngClass]="{'alert-danger rounded pl-1 pr-1 mb-1': !copyCount.hopeful && copyCount.count > 0}">
+          [ngClass]="{'alert-danger rounded ps-1 pe-1 mb-1': !copyCount.hopeful && copyCount.count > 0}">
           Viable Items: {{copyCount.hopeful || 0}}</span>
-        <span class="pl-2 pr-2"> | </span>
+        <span class="ps-2 pe-2"> | </span>
         <span i18n>Available Items: {{copyCount.available}}</span>
-        <span class="mr-4"></span>
+        <span class="me-4"></span>
       </ng-container>
     </ng-container>
     <div>
@@ -94,7 +94,7 @@
                   {{summary.display.author}}
                 </a>
               </div>
-              <div class="flex-1 font-weight-bold pl-1" i18n>Pubdate:</div>
+              <div class="flex-1 font-weight-bold ps-1" i18n>Pubdate:</div>
               <div class="flex-1">{{summary.display.pubdate}}</div>
               <div class="flex-1 fw-bold" i18n>Database ID:</div>
               <div class="flex-1">{{summary.id}}</div>
@@ -116,7 +116,7 @@
               <div class="flex-1 font-weight-bold" i18n>Record Owner:</div>
               <div class="flex-1">{{orgName(summary.record.owner())}}</div>
               -->
-              <div class="flex-1 font-weight-bold pl-1" i18n>Created On:</div>
+              <div class="flex-1 font-weight-bold ps-1" i18n>Created On:</div>
               <div class="flex-1">{{summary.record.create_date() | date:'short'}}</div>
               <div class="flex-1 fw-bold ps-1" i18n>Last Edited On:</div>
               <div class="flex-1">{{summary.record.edit_date() | date:'short'}}</div>
