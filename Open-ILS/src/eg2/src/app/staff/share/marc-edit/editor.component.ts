@@ -341,15 +341,18 @@ export class MarcEditorComponent implements OnInit {
     }
 
     setCatDate(clear?: boolean) {
+        this.dataSaving = true;
 
         let date: string = null;
 
         if (clear) {
             this.catDate = null;
             if (this.origCatDate === null) {
+                this.dataSaving = false;
                 return; // nothing to clear
             }
         } else if (this.catDate === null) {
+            this.dataSaving = false;
             return; // nothing to set
         } else {
             date = this.catDate.toISOString();
@@ -377,7 +380,9 @@ export class MarcEditorComponent implements OnInit {
                     const evt = this.evt.parse(resp);
                     if (evt) { alert(evt); }
                 }
-            }
+            },
+            () => this.dataSaving = false,
+            () => this.dataSaving = false
         );
     }
 

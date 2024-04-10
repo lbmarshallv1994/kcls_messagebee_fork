@@ -91,7 +91,7 @@
   </div>
 
   <div class="col-12">
-    <button class="btn btn-outline-dark me-2" [disabled]="catDate == origCatDate" 
+    <button class="btn btn-outline-dark me-2" [disabled]="dataSaving || catDate == origCatDate" 
       (click)="setCatDate();" i18n>Apply Date</button>
 
     <button class="btn btn-outline-dark" [disabled]="!origCatDate" 
