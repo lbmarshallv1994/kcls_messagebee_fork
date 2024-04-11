@@ -75,7 +75,7 @@
               </div>
               <div class="flex-1 fw-bold ps-1" i18n>Edition:</div>
               <div class="flex-1">{{summary.display.edition}}</div>
-              <div class="flex-1 fw-bold" i18n>TCN:</div>
+              <div class="flex-1 fw-bold ps-1" i18n>TCN:</div>
               <div class="flex-1">{{summary.record.tcn_value()}}</div>
               <div class="flex-1 fw-bold ps-1" i18n>Created By:</div>
               <div class="flex-1" *ngIf="summary.record.creator().usrname">
@@ -96,7 +96,7 @@
               </div>
               <div class="flex-1 fw-bold ps-1" i18n>Pubdate:</div>
               <div class="flex-1">{{summary.display.pubdate}}</div>
-              <div class="flex-1 fw-bold" i18n>Database ID:</div>
+              <div class="flex-1 fw-bold ps-1" i18n>Database ID:</div>
               <div class="flex-1">{{summary.id}}</div>
               <div class="flex-1 fw-bold ps-1" i18n>Last Edited By:</div>
               <div class="flex-1" *ngIf="summary.record.editor().usrname">
@@ -110,12 +110,8 @@
             <div class="d-flex">
               <div class="flex-1 fw-bold" i18n>Bib Call #:</div>
               <div class="flex-3">{{summary.bibCallNumber}}</div>
-              <div class="flex-1 fw-bold" i18n>Cataloging Date:</div>
+              <div class="flex-1 fw-bold ps-1" i18n>Cataloging Date:</div>
               <div class="flex-1">{{summary.record.cataloging_date() | date:'shortDate'}}</div>
-              <!--
-              <div class="flex-1 fw-bold" i18n>Record Owner:</div>
-              <div class="flex-1">{{orgName(summary.record.owner())}}</div>
-              -->
               <div class="flex-1 fw-bold ps-1" i18n>Created On:</div>
               <div class="flex-1">{{summary.record.create_date() | date:'short'}}</div>
               <div class="flex-1 fw-bold ps-1" i18n>Last Edited On:</div>
