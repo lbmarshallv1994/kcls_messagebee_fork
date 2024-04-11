@@ -87,14 +87,14 @@
           </li>
           <li class="list-group-item" *ngIf="expand">
             <div class="d-flex">
-              <div class="flex-1 font-weight-bold" i18n>Author:</div>
+              <div class="flex-1 fw-bold" i18n>Author:</div>
               <div class="flex-3">
                 <a routerLink="/staff/catalog/search" 
                   [queryParams]="{fieldClass: 'author', query: summary.display.author}">
                   {{summary.display.author}}
                 </a>
               </div>
-              <div class="flex-1 font-weight-bold ps-1" i18n>Pubdate:</div>
+              <div class="flex-1 fw-bold ps-1" i18n>Pubdate:</div>
               <div class="flex-1">{{summary.display.pubdate}}</div>
               <div class="flex-1 fw-bold" i18n>Database ID:</div>
               <div class="flex-1">{{summary.id}}</div>
@@ -110,13 +110,13 @@
             <div class="d-flex">
               <div class="flex-1 fw-bold" i18n>Bib Call #:</div>
               <div class="flex-3">{{summary.bibCallNumber}}</div>
-              <div class="flex-1 font-weight-bold" i18n>Cataloging Date:</div>
+              <div class="flex-1 fw-bold" i18n>Cataloging Date:</div>
               <div class="flex-1">{{summary.record.cataloging_date() | date:'shortDate'}}</div>
               <!--
-              <div class="flex-1 font-weight-bold" i18n>Record Owner:</div>
+              <div class="flex-1 fw-bold" i18n>Record Owner:</div>
               <div class="flex-1">{{orgName(summary.record.owner())}}</div>
               -->
-              <div class="flex-1 font-weight-bold ps-1" i18n>Created On:</div>
+              <div class="flex-1 fw-bold ps-1" i18n>Created On:</div>
               <div class="flex-1">{{summary.record.create_date() | date:'short'}}</div>
               <div class="flex-1 fw-bold ps-1" i18n>Last Edited On:</div>
               <div class="flex-1">{{summary.record.edit_date() | date:'short'}}</div>
