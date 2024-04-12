@@ -57,6 +57,7 @@ export class LineitemWorksheetComponent implements OnInit, AfterViewInit {
         this.net.request(
             'open-ils.acq', 'open-ils.acq.lineitem.retrieve',
             this.auth.token(), this.lineitemId, {
+                flesh_provider: true,
                 flesh_attrs: true,
                 flesh_notes: true,
                 flesh_cancel_reason: true,
