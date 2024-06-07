@@ -268,18 +268,21 @@ sub get_copy_price {
 }
 
 sub collect_events {
-
     my $start_date = get_start_date();
     announce('info', "Collecting events between dates $start_date and $end_date");
+
+    my %user_select = $core_type eq 'stgu' ? () : ($core_type => [$usr_field]);
+    my $order_field = $core_type eq 'stgu' ? 'row_id' : $usr_field;
+    my $target_id_field = $core_type eq 'stgu' ? 'row_id' : 'id';
 
     my $results = $e->json_query({
         select => {
             atev => ['target', 'user_data'],
-            $core_type => [$usr_field]
+            %user_select
         },
         from => {
             atev => {
-                $core_type => {field => 'id', fkey => 'target'}
+                $core_type => {field => $target_id_field, fkey => 'target'}
             }
         },
         where => {
@@ -290,7 +293,7 @@ sub collect_events {
             }
         },
         order_by => [
-            {class => $core_type, field => $usr_field}
+            {class => $core_type, field => $order_field}
         ]
     }, {timeout => 10800}) 
         or announce('error', 'XML Notice query timed out', 1);
@@ -331,7 +334,8 @@ sub process_events {
     my @cur_events;
 
     for my $event (@$events) {
-        my $user_id = $event->{$usr_field};
+        # stgu: where a user is not a user.
+        my $user_id = $core_type eq 'stgu' ? $event->{target} : $event->{$usr_field};
 
         if ($user_id != $cur_usr) {
             print_one_user($xml_file, $cur_usr, \@cur_events) if @cur_events;
@@ -353,12 +357,38 @@ sub process_events {
         "Processed ".scalar(@$events)." events across $usr_count users");
 }
 
+# $source will be a staging table
+# $target will be the analogous actor.* table.
+sub map_staged_values {
+    my ($source, $target) = @_;
+    return unless $source && $target;
+
+    $target->id($source->row_id);
+
+    for my $field ($target->all_fields) {
+        # Only some fields are shared between stgu and au and related objects.
+        eval { $target->$field($source->$field) };
+    }
+}
+
 # Returns 1 if the script should continue processing the current user
 # Returns 0 to skip this user.
 sub collect_user_and_targets {
     my ($ctx, $user_id, $target_ids) = @_;
 
-    my $user = $ctx->{user} = $e->retrieve_actor_user([$user_id, $user_flesh]);
+    my $user;
+    if ($core_type eq 'stgu') {
+        my $stage = $e->retrieve_staging_user_stage($user_id) or return 0;
+
+        # Create a standard user from our staged user so we can minimize
+        # template changes for field name variations.
+        $user = $ctx->{user} = Fieldmapper::actor::user->new;
+        $ctx->{staged_delivery_method} = $stage->delivery_method;
+        map_staged_values($stage, $user);
+
+    } else {
+        $user = $ctx->{user} = $e->retrieve_actor_user([$user_id, $user_flesh]);
+    }
 
     if ($event_tag && $event_tag =~ /print/) {
         my $addr = $user->mailing_address || $user->billing_address;
@@ -460,6 +490,22 @@ sub collect_user_and_targets {
 
     
     } elsif ($core_type eq 'au') {
+
+        $ctx->{context_org} = $user->home_ou;
+
+    } elsif ($core_type eq 'stgu') {
+
+        my $stage_addr = $e->search_staging_billing_address_stage({usrname => $user->usrname})->[0];
+
+        return 0 unless $stage_addr; # required in the form.
+
+        my $billing_address = Fieldmapper::actor::user_address->new;
+        map_staged_values($stage_addr, $billing_address);
+
+        $billing_address->valid('t');
+        $user->billing_address($billing_address);
+
+        $user->home_ou($e->retrieve_actor_org_unit($user->home_ou));
 
         $ctx->{context_org} = $user->home_ou;
 
