@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable, empty, from} from 'rxjs';
 import {map, concatMap, mergeMap} from 'rxjs/operators';
-import {IdlObject} from '@eg/core/idl.service';
+import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {OrgService} from '@eg/core/org.service';
 import {PcrudService, PcrudQueryOps} from '@eg/core/pcrud.service';
@@ -17,6 +17,7 @@ import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {WorkLogService, WorkLogEntry} from '@eg/staff/share/worklog/worklog.service';
 import {PermService} from '@eg/core/perm.service';
 import {PrintService} from '@eg/share/print/print.service';
+import {ToastService} from '@eg/share/toast/toast.service';
 
 export interface CircDisplayInfo {
     title?: string;
@@ -245,6 +246,7 @@ export class CircService {
         private audio: AudioService,
         private evt: EventService,
         private org: OrgService,
+        private idl: IdlService,
         private net: NetService,
         private pcrud: PcrudService,
         private serverStore: ServerStoreService,
@@ -254,7 +256,8 @@ export class CircService {
         private holdings: HoldingsService,
         private worklog: WorkLogService,
         private perms: PermService,
-        private bib: BibRecordService
+        private bib: BibRecordService,
+        private toast: ToastService
     ) {}
 
     applySettings(): Promise<any> {
@@ -1176,17 +1179,66 @@ export class CircService {
             return this.getCopyNotes(copy.id())
             .then(notes => {
                 copy.notes(notes);
-
                 this.printer.print({
                     printContext: 'receipt',
                     templateName: 'ill_return_receipt',
                     contextData: {copy: copy}
                 });
             })
+            .then(_ => {
+                // Auto-delete ILL copies upon successful checkin.
+                // Clone these so we can freely modify them without
+                // affecting the data display to the user.
+                let c = this.idl.clone(copy);
+                let v = this.idl.clone(vol);
+                return this.deleteIllHoldings(c, v, rec);
+            })
             .then(_ => result);
         }
 
         return Promise.resolve(result);
+    }
+
+    deleteIllHoldings(copy: IdlObject, volume: IdlObject, record: IdlObject): Promise<void> {
+        copy.isdeleted(true);
+        volume.ischanged(true);
+        volume.copies([copy]);
+
+        if (typeof volume.prefix() === 'object') {
+            volume.prefix(volume.prefix().id());
+        }
+
+        if (typeof volume.suffix() === 'object') {
+            volume.suffix(volume.suffix().id());
+        }
+
+        console.log('Deleting ILL copy ', copy.barcode());
+
+        return this.net.request(
+            'open-ils.cat',
+            'open-ils.cat.asset.volume.fleshed.batch.update.override',
+            this.auth.token(),
+            [volume]
+        )
+        .toPromise()
+        .then(delVol => {
+            console.log('Delete copy response: ', delVol);
+            console.log('Deleting ILL record ', record.doc_id());
+
+            return this.net.request(
+                'open-ils.cat',
+                'open-ils.cat.biblio.record_entry.delete',
+                this.auth.token(),
+                record.doc_id()
+            ).toPromise();
+        })
+        .then(delRec => {
+            console.debug('Deleting record returned ', delRec);
+            // Allow the "print queued" toast to appear for a sec.
+            setTimeout(() => {
+                this.toast.info($localize`Deleted item ${copy.barcode()}`);
+            }, 2000);
+        });
     }
 
     handleCheckinLocAlert(result: CheckinResult): Promise<CheckinResult> {
