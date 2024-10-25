@@ -30,6 +30,7 @@ SET org_addr = context_org.mailing_address || context_org.billing_address;
       <addr_city>[% escape_xml(user_addr.city) %]</addr_city>
       <addr_state>[% escape_xml(user_addr.state) %]</addr_state>
       <addr_post_code>[% escape_xml(user_addr.post_code) %]</addr_post_code>
+      <locale>[% user.locale %]</locale>
       <day_phone>[% user.day_phone %]</day_phone>
       <evening_phone>[% user.evening_phone %]</evening_phone>
       <other_phone>[% user.other_phone %]</other_phone>
